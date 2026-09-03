@@ -1,0 +1,66 @@
+@model IEnumerable<Inmobiliaria.Models.Reserva>
+
+@{
+    ViewData["Title"] = "Gestión de Reservas";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Listado de Reservas</h2>
+    <a asp-action="Create" class="btn btn-primary"><i class="bi bi-plus-circle"></i> Nueva Reserva</a>
+</div>
+
+@if (TempData["Mensaje"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["Mensaje"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<table class="table table-striped table-hover align-middle">
+    <thead class="table-dark">
+        <tr>
+            <th>#</th>
+            <th>Inquilino</th>
+            <th>Inmueble</th>
+            <th>Desde</th>
+            <th>Hasta</th>
+            <th>Monto Diario</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.IdReserva</td>
+                <td>@item.Inquilino?.NombreCompleto</td>
+                <td>@item.Inmueble?.Direccion</td>
+                <td>@item.FechaDesde.ToString("dd/MM/yyyy")</td>
+                <td>@item.FechaHasta.ToString("dd/MM/yyyy")</td>
+                <td>$@item.MontoDiario</td>
+                <td>
+                    @if (item.FechaFinalizacion.HasValue)
+                    {
+                        <span class="badge bg-warning text-dark">Finalizada Anticipadamente</span>
+                    }
+                    else if (DateTime.Now > item.FechaHasta)
+                    {
+                        <span class="badge bg-secondary">Concluida</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-success">Activa</span>
+                    }
+                </td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@item.IdReserva" class="btn btn-sm btn-outline-warning">Editar</a>
+                    <form asp-action="Delete" asp-route-id="@item.IdReserva" method="post" class="d-inline" onsubmit="return confirm('¿Seguro que deseas eliminar esta reserva?');">
+                        <button type="submit" class="btn btn-sm btn-outline-danger">Eliminar</button>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
