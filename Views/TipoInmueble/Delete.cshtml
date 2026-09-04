@@ -1,0 +1,22 @@
+@model Inmobiliaria.Models.TipoInmueble
+
+@{
+    ViewData["Title"] = "Eliminar tipo de inmueble";
+}
+
+<h1>Eliminar tipo de inmueble</h1>
+
+<div class="alert alert-warning">
+    ¿Confirmás que querés eliminar este tipo de inmueble? Esta acción no se puede deshacer.
+</div>
+
+<dl class="row">
+    <dt class="col-sm-2">Descripción</dt>
+    <dd class="col-sm-10">@Model.Descripcion</dd>
+</dl>
+
+<form asp-action="Delete" method="post">
+    <input type="hidden" asp-for="IdTipo" />
+    <button type="submit" class="btn btn-danger">Eliminar</button>
+    <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
+</form>
