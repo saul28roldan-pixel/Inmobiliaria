@@ -23,7 +23,7 @@
             <th>DNI</th>
             <th>Email</th>
             <th>Teléfono</th>
-            <th></th>
+            <th>Acciones</th>
         </tr>
     </thead>
     <tbody>
@@ -36,8 +36,9 @@
                 <td>@p.Email</td>
                 <td>@p.Telefono</td>
                 <td>
-                    <a asp-action="Edit" asp-route-id="@p.IdPropietario" class="btn btn-sm btn-secondary">Editar</a>
-                    <a asp-action="Delete" asp-route-id="@p.IdPropietario" class="btn btn-sm btn-danger">Eliminar</a>
+                    <a asp-action="Details" asp-route-id="@p.IdPropietario" class="btn btn-info btn-sm">Details</a>
+                    <a asp-action="Edit" asp-route-id="@p.IdPropietario" class="btn btn-warning btn-sm">Editar</a>
+                    <a asp-action="Delete" asp-route-id="@p.IdPropietario" class="btn btn-danger btn-sm">Eliminar</a>
                 </td>
             </tr>
         }

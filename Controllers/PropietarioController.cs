@@ -99,7 +99,16 @@ namespace Inmobiliaria.Controllers
             }
             return View(p);
         }
-
+        // GET: Propietarios/Details/5
+      public IActionResult Details(int id)
+      {
+           var propietario = repositorio.ObtenerPorId(id);
+           if (propietario == null)
+           {
+                return NotFound();
+           }
+           return View(propietario);
+        }
         // POST: Propietarios/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]

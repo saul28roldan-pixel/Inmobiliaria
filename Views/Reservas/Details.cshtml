@@ -1,0 +1,49 @@
+@model Inmobiliaria.Models.Reserva
+
+@{
+    ViewData["Title"] = "Detalles de la Reserva";
+}
+
+<h1>Detalles de la Reserva #@Model.IdReserva</h1>
+
+<div class="card">
+    <div class="card-body">
+        <dl class="row">
+            <dt class="col-sm-3">Inquilino</dt>
+            <dd class="col-sm-9">@(Model.Inquilino?.NombreCompleto ?? "No especificado")</dd>
+
+            <dt class="col-sm-3">Inmueble</dt>
+            <dd class="col-sm-9">@(Model.Inmueble?.Direccion ?? "No especificado")</dd>
+
+            <dt class="col-sm-3">Fecha Desde</dt>
+            <dd class="col-sm-9">@Model.FechaDesde.ToString("dd/MM/yyyy")</dd>
+
+            <dt class="col-sm-3">Fecha Hasta</dt>
+            <dd class="col-sm-9">@Model.FechaHasta.ToString("dd/MM/yyyy")</dd>
+
+            <dt class="col-sm-3">Monto Diario</dt>
+            <dd class="col-sm-9">@Model.MontoDiario.ToString("C")</dd>
+
+            <dt class="col-sm-3">Estado</dt>
+            <dd class="col-sm-9">
+                @if (Model.FechaFinalizacion.HasValue)
+                {
+                    <span class="badge bg-warning text-dark">Finalizada Anticipadamente</span>
+                }
+                else if (DateTime.Now > Model.FechaHasta)
+                {
+                    <span class="badge bg-secondary">Concluida</span>
+                }
+                else
+                {
+                    <span class="badge bg-success">Activa</span>
+                }
+            </dd>
+        </dl>
+    </div>
+</div>
+
+<div class="mt-3">
+    <a asp-action="Edit" asp-route-id="@Model.IdReserva" class="btn btn-primary">Editar</a>
+    <a asp-action="Index" class="btn btn-secondary">Volver a la lista</a>
+</div>

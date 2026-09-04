@@ -100,30 +100,53 @@ namespace Inmobiliaria.Models
         }
 
         public int Alta(Reserva reserva)
+{
+    using (var connection = ObtenerConexion())
+    {
+        // 1. PRIMERO: VALIDAR QUE NO HAYA SUPERPOSICIÓN DE FECHAS
+        var sqlValidacion = @"
+            SELECT COUNT(*) FROM Reserva 
+            WHERE IdInmueble = @IdInmueble 
+            AND FechaDesde <= @FechaHasta 
+            AND FechaHasta >= @FechaDesde;";
+
+        using (var commandValidacion = new MySqlCommand(sqlValidacion, connection))
         {
-            using (var connection = ObtenerConexion())
+            commandValidacion.Parameters.AddWithValue("@IdInmueble", reserva.IdInmueble);
+            commandValidacion.Parameters.AddWithValue("@FechaDesde", reserva.FechaDesde);
+            commandValidacion.Parameters.AddWithValue("@FechaHasta", reserva.FechaHasta);
+
+            connection.Open();
+            int reservasExistentes = Convert.ToInt32(commandValidacion.ExecuteScalar());
+
+            // Si el conteo es mayor a 0, significa que ya hay una reserva en esas fechas
+            if (reservasExistentes > 0)
             {
-                var sql = @"
-                    INSERT INTO Reserva 
-                    (IdInquilino, IdInmueble, IdUsuarioCreacion, FechaDesde, FechaHasta, MontoDiario)
-                    VALUES 
-                    (@IdInquilino, @IdInmueble, @IdUsuarioCreacion, @FechaDesde, @FechaHasta, @MontoDiario);
-                    SELECT LAST_INSERT_ID();";
-
-                using (var command = new MySqlCommand(sql, connection))
-                {
-                    command.Parameters.AddWithValue("@IdInquilino", reserva.IdInquilino);
-                    command.Parameters.AddWithValue("@IdInmueble", reserva.IdInmueble);
-                    command.Parameters.AddWithValue("@IdUsuarioCreacion", reserva.IdUsuarioCreacion);
-                    command.Parameters.AddWithValue("@FechaDesde", reserva.FechaDesde);
-                    command.Parameters.AddWithValue("@FechaHasta", reserva.FechaHasta);
-                    command.Parameters.AddWithValue("@MontoDiario", reserva.MontoDiario);
-
-                    connection.Open();
-                    return Convert.ToInt32(command.ExecuteScalar());
-                }
+                throw new Exception("El inmueble ya se encuentra reservado en las fechas seleccionadas. Por favor, elija otras fechas.");
             }
         }
+
+        // 2. SEGUNDO: SI PASA LA VALIDACIÓN, RECién ahí hacemos el INSERT
+        var sqlInsert = @"
+            INSERT INTO Reserva 
+            (IdInquilino, IdInmueble, IdUsuarioCreacion, FechaDesde, FechaHasta, MontoDiario)
+            VALUES 
+            (@IdInquilino, @IdInmueble, @IdUsuarioCreacion, @FechaDesde, @FechaHasta, @MontoDiario);
+            SELECT LAST_INSERT_ID();";
+
+        using (var commandInsert = new MySqlCommand(sqlInsert, connection))
+        {
+            commandInsert.Parameters.AddWithValue("@IdInquilino", reserva.IdInquilino);
+            commandInsert.Parameters.AddWithValue("@IdInmueble", reserva.IdInmueble);
+            commandInsert.Parameters.AddWithValue("@IdUsuarioCreacion", reserva.IdUsuarioCreacion);
+            commandInsert.Parameters.AddWithValue("@FechaDesde", reserva.FechaDesde);
+            commandInsert.Parameters.AddWithValue("@FechaHasta", reserva.FechaHasta);
+            commandInsert.Parameters.AddWithValue("@MontoDiario", reserva.MontoDiario);
+
+            return Convert.ToInt32(commandInsert.ExecuteScalar());
+        }
+    }
+}
 
         public int Modificacion(Reserva reserva)
         {

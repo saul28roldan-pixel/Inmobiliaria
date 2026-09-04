@@ -60,7 +60,16 @@ namespace Inmobiliaria.Controllers
             }
             return View(i);
         }
-
+        // GET: Inquilinos/Details/5
+        public IActionResult Details(int id)
+        {
+            var inquilino = repositorio.ObtenerPorId(id);
+            if (inquilino == null)
+           {
+               return NotFound();
+           }
+           return View(inquilino);
+   }
         // POST: Inquilinos/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
