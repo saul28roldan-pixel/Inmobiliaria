@@ -5,12 +5,14 @@ namespace Inmobiliaria.Models
 {
     public class RepositorioReserva : RepositorioBase, IRepositorioReserva
     {
-        public RepositorioReserva(IConfiguration configuration) : base(configuration) { }
+        // Constructor corregido: no pasa argumentos a base()
+        public RepositorioReserva() : base() { }
 
         public List<Reserva> ObtenerTodos()
         {
             var lista = new List<Reserva>();
-            using (var connection = new MySqlConnection(ConnectionString))
+            // Usamos ObtenerConexion() en lugar de new MySqlConnection(ConnectionString)
+            using (var connection = ObtenerConexion())
             {
                 var sql = @"
                     SELECT r.*, 
@@ -56,7 +58,7 @@ namespace Inmobiliaria.Models
         public Reserva? ObtenerPorId(int id)
         {
             Reserva? reserva = null;
-            using (var connection = new MySqlConnection(ConnectionString))
+            using (var connection = ObtenerConexion())
             {
                 var sql = @"
                     SELECT r.*, 
@@ -99,7 +101,7 @@ namespace Inmobiliaria.Models
 
         public int Alta(Reserva reserva)
         {
-            using (var connection = new MySqlConnection(ConnectionString))
+            using (var connection = ObtenerConexion())
             {
                 var sql = @"
                     INSERT INTO Reserva 
@@ -125,7 +127,7 @@ namespace Inmobiliaria.Models
 
         public int Modificacion(Reserva reserva)
         {
-            using (var connection = new MySqlConnection(ConnectionString))
+            using (var connection = ObtenerConexion())
             {
                 var sql = @"
                     UPDATE Reserva 
@@ -153,7 +155,7 @@ namespace Inmobiliaria.Models
 
         public int FinalizarAnticipadamente(int idReserva, DateTime fechaFinalizacion, decimal multa, int idUsuarioFinalizacion)
         {
-            using (var connection = new MySqlConnection(ConnectionString))
+            using (var connection = ObtenerConexion())
             {
                 var sql = @"
                     UPDATE Reserva 
@@ -177,7 +179,7 @@ namespace Inmobiliaria.Models
 
         public int Eliminar(int id)
         {
-            using (var connection = new MySqlConnection(ConnectionString))
+            using (var connection = ObtenerConexion())
             {
                 var sql = "DELETE FROM Reserva WHERE IdReserva = @id;";
                 using (var command = new MySqlCommand(sql, connection))
