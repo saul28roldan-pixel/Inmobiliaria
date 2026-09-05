@@ -3,7 +3,7 @@
 Sistema de gestión de alquileres temporales, desarrollado como proyecto de la cátedra de Desarrollo de Aplicaciones Web.
 
 ## Integrantes del Grupo
-- **ontiveros José** - (GitHub: jontive21)
+- **Ontiveros José** - (GitHub: jontive21)
 - **Roldan Saúl** - (GitHub: saul28roldan-pixel)
 - **Orozco Miguel** - (GitHub: BLACK1895)
 
@@ -44,3 +44,4 @@ Permite administrar propietarios, inmuebles, inquilinos, reservas y pagos de una
 
 ## Diagrama
 ![Diagrama](img/diagrama_bd.png)
+
