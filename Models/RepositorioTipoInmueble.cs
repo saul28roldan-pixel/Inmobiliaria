@@ -1,9 +1,16 @@
+using Microsoft.Extensions.Configuration;
 using MySqlConnector;
+using System.Collections.Generic;
 
 namespace Inmobiliaria.Models
 {
     public class RepositorioTipoInmueble : RepositorioBase, IRepositorioTipoInmueble
     {
+        // ¡ESTE CONSTRUCTOR ES EL QUE FALTABA!
+        public RepositorioTipoInmueble(IConfiguration configuration) : base(configuration) 
+        { 
+        }
+
         public int Alta(TipoInmueble t)
         {
             int id = 0;
@@ -106,7 +113,6 @@ namespace Inmobiliaria.Models
             return t;
         }
 
-        // Convierte la fila actual del reader en un objeto TipoInmueble.
         private static TipoInmueble MapearTipoInmueble(MySqlDataReader reader)
         {
             return new TipoInmueble

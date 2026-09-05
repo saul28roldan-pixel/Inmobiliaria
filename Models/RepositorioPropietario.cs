@@ -1,9 +1,16 @@
+using Microsoft.Extensions.Configuration;
 using MySqlConnector;
+using System.Collections.Generic;
 
 namespace Inmobiliaria.Models
 {
     public class RepositorioPropietario : RepositorioBase, IRepositorioPropietario
     {
+        // Constructor corregido: recibe IConfiguration y se lo pasa a la clase base
+        public RepositorioPropietario(IConfiguration configuration) : base(configuration) 
+        { 
+        }
+
         public int Alta(Propietario p)
         {
             int id = 0;
@@ -118,7 +125,6 @@ namespace Inmobiliaria.Models
             return p;
         }
 
-        // Convierte la fila actual del reader en un objeto Propietario.
         private static Propietario MapearPropietario(MySqlDataReader reader)
         {
             return new Propietario

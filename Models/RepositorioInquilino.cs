@@ -1,10 +1,17 @@
+using Microsoft.Extensions.Configuration;
 using MySqlConnector;
+using System.Collections.Generic;
 
 namespace Inmobiliaria.Models
 {
     public class RepositorioInquilino : RepositorioBase, IRepositorioInquilino
     {
-        public int Alta(Inquilino p)
+        // Constructor corregido: recibe IConfiguration y se lo pasa a la clase base
+        public RepositorioInquilino(IConfiguration configuration) : base(configuration) 
+        { 
+        }
+
+        public int Alta(Inquilino i)
         {
             int id = 0;
             string sql = @"INSERT INTO Inquilino (NombreCompleto, Dni, Email, Telefono)
@@ -14,15 +21,15 @@ namespace Inmobiliaria.Models
             using (var connection = ObtenerConexion())
             {
                 var command = new MySqlCommand(sql, connection);
-                command.Parameters.AddWithValue("@nombreCompleto", p.NombreCompleto);
-                command.Parameters.AddWithValue("@dni", p.Dni);
-                command.Parameters.AddWithValue("@email", (object?)p.Email ?? DBNull.Value);
-                command.Parameters.AddWithValue("@telefono", (object?)p.Telefono ?? DBNull.Value);
+                command.Parameters.AddWithValue("@nombreCompleto", i.NombreCompleto);
+                command.Parameters.AddWithValue("@dni", i.Dni);
+                command.Parameters.AddWithValue("@email", (object?)i.Email ?? DBNull.Value);
+                command.Parameters.AddWithValue("@telefono", (object?)i.Telefono ?? DBNull.Value);
 
                 connection.Open();
                 id = Convert.ToInt32(command.ExecuteScalar());
             }
-            p.IdInquilino = id;
+            i.IdInquilino = id;
             return id;
         }
 
@@ -42,7 +49,7 @@ namespace Inmobiliaria.Models
             return filasAfectadas > 0;
         }
 
-        public bool Modificacion(Inquilino p)
+        public bool Modificacion(Inquilino i)
         {
             int filasAfectadas = 0;
             string sql = @"UPDATE Inquilino
@@ -55,11 +62,11 @@ namespace Inmobiliaria.Models
             using (var connection = ObtenerConexion())
             {
                 var command = new MySqlCommand(sql, connection);
-                command.Parameters.AddWithValue("@nombreCompleto", p.NombreCompleto);
-                command.Parameters.AddWithValue("@dni", p.Dni);
-                command.Parameters.AddWithValue("@email", (object?)p.Email ?? DBNull.Value);
-                command.Parameters.AddWithValue("@telefono", (object?)p.Telefono ?? DBNull.Value);
-                command.Parameters.AddWithValue("@id", p.IdInquilino);
+                command.Parameters.AddWithValue("@nombreCompleto", i.NombreCompleto);
+                command.Parameters.AddWithValue("@dni", i.Dni);
+                command.Parameters.AddWithValue("@email", (object?)i.Email ?? DBNull.Value);
+                command.Parameters.AddWithValue("@telefono", (object?)i.Telefono ?? DBNull.Value);
+                command.Parameters.AddWithValue("@id", i.IdInquilino);
 
                 connection.Open();
                 filasAfectadas = command.ExecuteNonQuery();
@@ -92,7 +99,7 @@ namespace Inmobiliaria.Models
 
         public Inquilino? ObtenerPorId(int id)
         {
-            Inquilino? p = null;
+            Inquilino? i = null;
             string sql = @"SELECT IdInquilino, NombreCompleto, Dni, Email, Telefono
                             FROM Inquilino
                             WHERE IdInquilino = @id";
@@ -108,11 +115,11 @@ namespace Inmobiliaria.Models
                 {
                     if (reader.Read())
                     {
-                        p = MapearInquilino(reader);
+                        i = MapearInquilino(reader);
                     }
                 }
             }
-            return p;
+            return i;
         }
 
         private static Inquilino MapearInquilino(MySqlDataReader reader)

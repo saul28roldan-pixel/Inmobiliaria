@@ -1,13 +1,14 @@
-using Inmobiliaria.Models;
+using Microsoft.Extensions.Configuration;
 using MySqlConnector;
 
 namespace Inmobiliaria.Models
 {
     public class RepositorioReserva : RepositorioBase, IRepositorioReserva
     {
-        // Constructor corregido: no pasa argumentos a base()
-        public RepositorioReserva() : base() { }
-
+        // Constructor corregido para recibir IConfiguration y pasarlo a base()
+        public RepositorioReserva(IConfiguration configuration) : base(configuration) 
+        { 
+        }
         public List<Reserva> ObtenerTodos()
         {
             var lista = new List<Reserva>();
