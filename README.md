@@ -2,10 +2,10 @@
 
 Sistema de gestión de alquileres temporales, desarrollado como proyecto de la cátedra de Desarrollo de Aplicaciones Web.
 
-## Integrantes del Grupo
-- **Ontiveros José** - (GitHub: jontive21)
-- **Roldan Saúl** - (GitHub: saul28roldan-pixel)
-- **Orozco Miguel** - (GitHub: BLACK1895)
+## 👥 Integrantes del Grupo
+- **Ontiveros José** - [@jontive21](https://github.com/jontive21)
+- **Roldan Saúl** - [@saul28roldan-pixel](https://github.com/saul28roldan-pixel)
+- **Orozco Miguel** - [@BLACK1895](https://github.com/BLACK1895)
 
 ## Descripción
 Permite administrar propietarios, inmuebles, inquilinos, reservas y pagos de una inmobiliaria dedicada a alquileres temporales. Una de las reglas centrales del sistema es que un inmueble no puede tener dos reservas que se superpongan en el tiempo.
@@ -39,8 +39,18 @@ Permite administrar propietarios, inmuebles, inquilinos, reservas y pagos de una
 5. Ejecuta el script completo. Esto creará la base de datos `InmobiliariaDB`, todas las tablas con sus relaciones (Foreign Keys) y cargará datos de prueba iniciales.
    
    *Alternativamente, desde la terminal (PowerShell/CMD) en la carpeta del proyecto, puedes ejecutar:*
-   ```bash
-   mysql -u root -p < script_base_datos.sql
+
+```bash
+mysql -u root -p < script_base_datos.sql
+```
+
+## Credenciales de Acceso (Usuarios de Prueba)
+Para ingresar al sistema y probar las funcionalidades de autenticación y roles, utilice las siguientes credenciales (ya cargadas en el script de base de datos):
+
+| Rol | Usuario | Contraseña |
+|---|---|---|
+| **Administrador** | `admin` | `admin123` |
+| **Empleado** | `empleado` | `empleado123` |
 
 ## Diagrama
 ![Diagrama](img/diagrama_bd.png)
