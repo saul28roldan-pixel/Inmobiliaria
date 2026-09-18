@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -53,12 +54,24 @@ namespace Inmobiliaria.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult Create(Reserva reserva)
         {
-            reserva.IdUsuarioCreacion = 1; 
+            // Se toma el ID del usuario logueado (viene del cookie de autenticación),
+            // ya no queda hardcodeado en 1.
+            reserva.IdUsuarioCreacion = ObtenerIdUsuarioActual();
+
             if (ModelState.IsValid)
             {
-                _repoReserva.Alta(reserva);
-                TempData["Mensaje"] = "Reserva creada exitosamente.";
-                return RedirectToAction(nameof(Index));
+                try
+                {
+                    _repoReserva.Alta(reserva);
+                    TempData["Mensaje"] = "Reserva creada exitosamente.";
+                    return RedirectToAction(nameof(Index));
+                }
+                catch (Exception ex)
+                {
+                    // Antes esta excepción (ej: fechas superpuestas) no se
+                    // capturaba y tiraba un error 500. Ahora se muestra en la vista.
+                    ViewBag.Error = ex.Message;
+                }
             }
             CargarDesplegables();
             return View(reserva);
@@ -86,9 +99,16 @@ namespace Inmobiliaria.Controllers
             if (id != reserva.IdReserva) return BadRequest();
             if (ModelState.IsValid)
             {
-                _repoReserva.Modificacion(reserva);
-                TempData["Mensaje"] = "Reserva actualizada correctamente.";
-                return RedirectToAction(nameof(Index));
+                try
+                {
+                    _repoReserva.Modificacion(reserva);
+                    TempData["Mensaje"] = "Reserva actualizada correctamente.";
+                    return RedirectToAction(nameof(Index));
+                }
+                catch (Exception ex)
+                {
+                    ViewBag.Error = ex.Message;
+                }
             }
             CargarDesplegables();
             return View(reserva);
@@ -107,6 +127,13 @@ namespace Inmobiliaria.Controllers
         {
             ViewBag.Inquilinos = new SelectList(_repoInquilino.ObtenerTodos(), "IdInquilino", "NombreCompleto");
             ViewBag.Inmuebles = new SelectList(_repoInmueble.ObtenerTodos(), "IdInmueble", "Direccion");
+        }
+
+        // Lee el Id del usuario logueado desde los claims del cookie de autenticación.
+        private int ObtenerIdUsuarioActual()
+        {
+            var idClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            return int.TryParse(idClaim, out int id) ? id : 0;
         }
     }
 }

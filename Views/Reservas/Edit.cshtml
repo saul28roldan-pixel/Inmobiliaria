@@ -1,18 +1,22 @@
 @model Inmobiliaria.Models.Reserva
 
 @{
-    ViewData["Title"] = "Crear Reserva";
+    ViewData["Title"] = "Editar Reserva";
 }
 
-<h2>Crear Nueva Reserva</h2>
+<h2>Editar Reserva #@Model.IdReserva</h2>
 <hr />
+
 @if (ViewBag.Error != null)
 {
     <div class="alert alert-danger">@ViewBag.Error</div>
 }
+
 <div class="row">
     <div class="col-md-6">
-        <form asp-action="Create" method="post">
+        <form asp-action="Edit" method="post">
+            <input type="hidden" asp-for="IdReserva" />
+
             <div class="mb-3">
                 <label asp-for="IdInquilino" class="form-label">Inquilino</label>
                 <select asp-for="IdInquilino" class="form-select" asp-items="ViewBag.Inquilinos">
