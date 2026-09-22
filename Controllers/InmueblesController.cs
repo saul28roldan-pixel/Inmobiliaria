@@ -1,9 +1,12 @@
+using Microsoft.AspNetCore.Authorization; // Agregado para [Authorize]
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Inmobiliaria.Models;
 using System.Linq;
+
 namespace Inmobiliaria.Controllers
 {
+    [Authorize] // Agregado: Protege todo el controlador
     public class InmueblesController : Controller
     {
         private readonly IRepositorioInmueble repositorioInmueble;
@@ -17,10 +20,23 @@ namespace Inmobiliaria.Controllers
             this.repositorioTipoInmueble = repositorioTipoInmueble;
         }
 
-        // GET: Inmuebles
-        public IActionResult Index()
+        // GET: Inmuebles (CON BÚSQUEDA)
+        public IActionResult Index(string? busqueda)
         {
             var lista = repositorioInmueble.ObtenerTodos();
+
+            // Si el usuario escribió algo en el buscador, filtramos la lista
+                        if (!string.IsNullOrEmpty(busqueda))
+            {
+                lista = lista.Where(i => 
+                    i.Direccion.Contains(busqueda, StringComparison.OrdinalIgnoreCase) ||
+                    (!string.IsNullOrEmpty(i.NombrePropietario) && i.NombrePropietario.Contains(busqueda, StringComparison.OrdinalIgnoreCase))
+                ).ToList();
+            }
+
+            // Guardamos el término de búsqueda para que el input no se borre al recargar
+            ViewBag.BusquedaActual = busqueda;
+            
             return View(lista);
         }
 
@@ -140,7 +156,6 @@ namespace Inmobiliaria.Controllers
         // Método privado para cargar los dropdowns de Propietario y TipoInmueble
         private void CargarDropdowns()
         {
-            // Dropdown de Propietarios - Concatenamos Nombre y Apellido
             var propietarios = repositorioPropietario.ObtenerTodos();
             var listaPropietarios = propietarios.Select(p => new SelectListItem
             {
@@ -149,7 +164,6 @@ namespace Inmobiliaria.Controllers
             }).ToList();
             ViewBag.Propietarios = listaPropietarios;
 
-            // Dropdown de Tipos de Inmueble
             var tipos = repositorioTipoInmueble.ObtenerTodos();
             ViewBag.Tipos = tipos.Select(t => new SelectListItem
             {

@@ -1,23 +1,36 @@
+using System.Linq;
+using Microsoft.AspNetCore.Authorization; // Agregado para [Authorize]
 using Microsoft.AspNetCore.Mvc;
 using Inmobiliaria.Models;
 
 namespace Inmobiliaria.Controllers
 {
+    [Authorize] // Agregado: Protege todo el controlador
     public class TipoInmuebleController : Controller
     {
         private readonly IRepositorioTipoInmueble repositorio;
 
-        // El framework inyecta automáticamente la implementación
-        // registrada en Program.cs (AddScoped<IRepositorioTipoInmueble, RepositorioTipoInmueble>)
         public TipoInmuebleController(IRepositorioTipoInmueble repositorio)
         {
             this.repositorio = repositorio;
         }
 
-        // GET: TipoInmueble
-        public IActionResult Index()
+        // GET: TipoInmueble (CON BÚSQUEDA)
+        public IActionResult Index(string? busqueda)
         {
             var lista = repositorio.ObtenerTodos();
+
+            // Si el usuario escribió algo, filtramos por Descripción
+            if (!string.IsNullOrEmpty(busqueda))
+            {
+                lista = lista.Where(t => 
+                    t.Descripcion.Contains(busqueda, StringComparison.OrdinalIgnoreCase)
+                ).ToList();
+            }
+
+            // Guardamos el término para que el input no se borre al recargar
+            ViewBag.BusquedaActual = busqueda;
+            
             return View(lista);
         }
 
@@ -25,12 +38,10 @@ namespace Inmobiliaria.Controllers
         public IActionResult Details(int id)
         {
             var tipo = repositorio.ObtenerPorId(id);
-
             if (tipo == null)
             {
                 return NotFound();
             }
-
             return View(tipo);
         }
 
@@ -67,12 +78,10 @@ namespace Inmobiliaria.Controllers
         public IActionResult Edit(int id)
         {
             var tipo = repositorio.ObtenerPorId(id);
-
             if (tipo == null)
             {
                 return NotFound();
             }
-
             return View(tipo);
         }
 
@@ -108,12 +117,10 @@ namespace Inmobiliaria.Controllers
         public IActionResult Delete(int id)
         {
             var tipo = repositorio.ObtenerPorId(id);
-
             if (tipo == null)
             {
                 return NotFound();
             }
-
             return View(tipo);
         }
 
