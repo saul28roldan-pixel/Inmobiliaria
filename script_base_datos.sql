@@ -1,134 +1,101 @@
-CREATE DATABASE IF NOT EXISTS `inmobiliariadb` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
-USE `inmobiliariadb`;
+CREATE DATABASE IF NOT EXISTS InmobiliariaDB;
+USE InmobiliariaDB;
 
--- --------------------------------------------------------
--- 1. Tabla: tipoinmueble
--- --------------------------------------------------------
-CREATE TABLE `tipoinmueble` (
-  `IdTipo` int(11) NOT NULL AUTO_INCREMENT,
-  `Descripcion` varchar(100) NOT NULL,
-  PRIMARY KEY (`IdTipo`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+-- 1. Tabla TipoInmueble (para el ABM de tipos)
+CREATE TABLE TipoInmueble (
+    IdTipo INT AUTO_INCREMENT PRIMARY KEY,
+    Descripcion VARCHAR(100) NOT NULL UNIQUE
+);
 
--- --------------------------------------------------------
--- 2. Tabla: propietario
--- --------------------------------------------------------
-CREATE TABLE `propietario` (
-  `IdPropietario` int(11) NOT NULL AUTO_INCREMENT,
-  `Nombre` varchar(100) NOT NULL,
-  `Apellido` varchar(100) NOT NULL,
-  `Dni` varchar(20) NOT NULL,
-  `Email` varchar(150) NOT NULL,
-  `Telefono` varchar(50) NOT NULL,
-  PRIMARY KEY (`IdPropietario`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+-- 2. Tabla Propietario
+CREATE TABLE Propietario (
+    IdPropietario INT AUTO_INCREMENT PRIMARY KEY,
+    Nombre VARCHAR(100) NOT NULL,
+    Apellido VARCHAR(100) NOT NULL,
+    Dni VARCHAR(20) NOT NULL UNIQUE,
+    Email VARCHAR(150),
+    Telefono VARCHAR(50)
+);
 
--- --------------------------------------------------------
--- 3. Tabla: inquilino
--- --------------------------------------------------------
-CREATE TABLE `inquilino` (
-  `IdInquilino` int(11) NOT NULL AUTO_INCREMENT,
-  `Dni` varchar(20) NOT NULL,
-  `NombreCompleto` varchar(150) NOT NULL,
-  `Telefono` varchar(50) NOT NULL,
-  `Email` varchar(150) NOT NULL,
-  PRIMARY KEY (`IdInquilino`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+-- 3. Tabla Inquilino
+CREATE TABLE Inquilino (
+    IdInquilino INT AUTO_INCREMENT PRIMARY KEY,
+    Dni VARCHAR(20) NOT NULL UNIQUE,
+    NombreCompleto VARCHAR(150) NOT NULL,
+    Telefono VARCHAR(50),
+    Email VARCHAR(150)
+);
 
--- --------------------------------------------------------
--- 4. Tabla: usuario
--- --------------------------------------------------------
-CREATE TABLE `usuario` (
-  `IdUsuario` int(11) NOT NULL AUTO_INCREMENT,
-  `Email` varchar(150) NOT NULL,
-  `PasswordHash` varchar(255) NOT NULL,
-  `NombreCompleto` varchar(150) NOT NULL,
-  `Rol` enum('administrador','empleado') NOT NULL DEFAULT 'empleado',
-  `Avatar` varchar(255) DEFAULT NULL,
-  PRIMARY KEY (`IdUsuario`),
-  UNIQUE KEY `UK_Usuario_Email` (`Email`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+-- 4. Tabla Usuario (Roles: administrador, empleado)
+CREATE TABLE Usuario (
+    IdUsuario INT AUTO_INCREMENT PRIMARY KEY,
+    Email VARCHAR(150) NOT NULL UNIQUE,
+    PasswordHash VARCHAR(255) NOT NULL,
+    NombreCompleto VARCHAR(150) NOT NULL,
+    Rol ENUM('administrador', 'empleado') NOT NULL,
+    Avatar VARCHAR(255)
+);
 
--- --------------------------------------------------------
--- 5. Tabla: inmueble
--- --------------------------------------------------------
-CREATE TABLE `inmueble` (
-  `IdInmueble` int(11) NOT NULL AUTO_INCREMENT,
-  `IdPropietario` int(11) NOT NULL,
-  `IdTipo` int(11) NOT NULL,
-  `Direccion` varchar(255) NOT NULL,
-  `Cupo` int(11) NOT NULL,
-  `Coordenadas` varchar(100) DEFAULT NULL,
-  `PrecioPorDia` decimal(10,2) NOT NULL,
-  `ImagenPortada` varchar(255) DEFAULT NULL,
-  `Disponible` tinyint(1) NOT NULL DEFAULT 1,
-  PRIMARY KEY (`IdInmueble`),
-  KEY `FK_Inmueble_Propietario` (`IdPropietario`),
-  KEY `FK_Inmueble_Tipo` (`IdTipo`),
-  CONSTRAINT `FK_Inmueble_Propietario` FOREIGN KEY (`IdPropietario`) REFERENCES `propietario` (`IdPropietario`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `FK_Inmueble_Tipo` FOREIGN KEY (`IdTipo`) REFERENCES `tipoinmueble` (`IdTipo`) ON DELETE RESTRICT ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+-- 5. Tabla Inmueble
+CREATE TABLE Inmueble (
+    IdInmueble INT AUTO_INCREMENT PRIMARY KEY,
+    IdPropietario INT NOT NULL,
+    IdTipo INT NOT NULL,
+    Direccion VARCHAR(255) NOT NULL,
+    Cupo INT NOT NULL COMMENT 'Cantidad máxima de personas',
+    Coordenadas VARCHAR(100),
+    PrecioPorDia DECIMAL(10, 2) NOT NULL,
+    ImagenPortada VARCHAR(255),
+    Disponible BOOLEAN DEFAULT TRUE COMMENT 'TRUE = disponible, FALSE = suspendido por el propietario',
+    FOREIGN KEY (IdPropietario) REFERENCES Propietario(IdPropietario),
+    FOREIGN KEY (IdTipo) REFERENCES TipoInmueble(IdTipo)
+);
 
--- --------------------------------------------------------
--- 6. Tabla: inmuebleimagen 
--- --------------------------------------------------------
-CREATE TABLE `inmuebleimagen` (
-  `IdImagen` int(11) NOT NULL AUTO_INCREMENT,
-  `IdInmueble` int(11) NOT NULL,
-  `RutaUrl` varchar(255) NOT NULL,
-  `EsPortada` tinyint(1) NOT NULL DEFAULT 0,
-  PRIMARY KEY (`IdImagen`),
-  KEY `FK_InmuebleImagen_Inmueble` (`IdInmueble`),
-  CONSTRAINT `FK_InmuebleImagen_Inmueble` FOREIGN KEY (`IdInmueble`) REFERENCES `inmueble` (`IdInmueble`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+-- 6. Tabla Reserva
+CREATE TABLE Reserva (
+    IdReserva INT AUTO_INCREMENT PRIMARY KEY,
+    IdInquilino INT NOT NULL,
+    IdInmueble INT NOT NULL,
+    IdUsuarioCreacion INT NOT NULL,
+    FechaDesde DATE NOT NULL,
+    FechaHasta DATE NOT NULL,
+    MontoDiario DECIMAL(10, 2) NOT NULL,
+    FechaFinalizacion DATE COMMENT 'Fecha real de finalización si termina antes',
+    Multa DECIMAL(10, 2) COMMENT 'Multa por terminación anticipada',
+    IdUsuarioFinalizacion INT COMMENT 'Usuario que finalizó la reserva',
+    FOREIGN KEY (IdInquilino) REFERENCES Inquilino(IdInquilino),
+    FOREIGN KEY (IdInmueble) REFERENCES Inmueble(IdInmueble),
+    FOREIGN KEY (IdUsuarioCreacion) REFERENCES Usuario(IdUsuario),
+    FOREIGN KEY (IdUsuarioFinalizacion) REFERENCES Usuario(IdUsuario)
+);
 
--- --------------------------------------------------------
--- 7. Tabla: reserva
--- --------------------------------------------------------
-CREATE TABLE `reserva` (
-  `IdReserva` int(11) NOT NULL AUTO_INCREMENT,
-  `IdInquilino` int(11) NOT NULL,
-  `IdInmueble` int(11) NOT NULL,
-  `IdUsuarioCreacion` int(11) NOT NULL,
-  `FechaDesde` date NOT NULL,
-  `FechaHasta` date NOT NULL,
-  `MontoDiario` decimal(10,2) NOT NULL,
-  `FechaFinalizacion` date DEFAULT NULL,
-  `Multa` decimal(10,2) DEFAULT NULL,
-  `IdUsuarioFinalizacion` int(11) DEFAULT NULL,
-  PRIMARY KEY (`IdReserva`),
-  KEY `FK_Reserva_Inquilino` (`IdInquilino`),
-  KEY `FK_Reserva_Inmueble` (`IdInmueble`),
-  KEY `FK_Reserva_UsuarioCreacion` (`IdUsuarioCreacion`),
-  KEY `FK_Reserva_UsuarioFinalizacion` (`IdUsuarioFinalizacion`),
-  CONSTRAINT `FK_Reserva_Inmueble` FOREIGN KEY (`IdInmueble`) REFERENCES `inmueble` (`IdInmueble`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `FK_Reserva_Inquilino` FOREIGN KEY (`IdInquilino`) REFERENCES `inquilino` (`IdInquilino`) ON DELETE RESTRICT ON UPDATE CASCADE,
-  CONSTRAINT `FK_Reserva_UsuarioCreacion` FOREIGN KEY (`IdUsuarioCreacion`) REFERENCES `usuario` (`IdUsuario`) ON DELETE RESTRICT ON UPDATE CASCADE,
-  CONSTRAINT `FK_Reserva_UsuarioFinalizacion` FOREIGN KEY (`IdUsuarioFinalizacion`) REFERENCES `usuario` (`IdUsuario`) ON DELETE RESTRICT ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+-- 7. Tabla Pago
+CREATE TABLE Pago (
+    IdPago INT AUTO_INCREMENT PRIMARY KEY,
+    IdReserva INT NOT NULL,
+    IdUsuarioCreacion INT NOT NULL,
+    Concepto VARCHAR(255) NOT NULL,
+    FechaPago DATE NOT NULL,
+    Importe DECIMAL(10, 2) NOT NULL,
+    Anulado BOOLEAN DEFAULT FALSE COMMENT 'TRUE si el pago fue anulado',
+    IdUsuarioAnulacion INT COMMENT 'Usuario que anuló el pago',
+    FechaAnulacion DATETIME,
+    FOREIGN KEY (IdReserva) REFERENCES Reserva(IdReserva),
+    FOREIGN KEY (IdUsuarioCreacion) REFERENCES Usuario(IdUsuario),
+    FOREIGN KEY (IdUsuarioAnulacion) REFERENCES Usuario(IdUsuario)
+);
 
--- --------------------------------------------------------
--- 8. Tabla: pago
--- --------------------------------------------------------
-CREATE TABLE `pago` (
-  `IdPago` int(11) NOT NULL AUTO_INCREMENT,
-  `IdReserva` int(11) NOT NULL,
-  `IdUsuarioCreacion` int(11) NOT NULL,
-  `Concepto` varchar(255) NOT NULL,
-  `FechaPago` date NOT NULL,
-  `Importe` decimal(10,2) NOT NULL,
-  `Anulado` tinyint(1) NOT NULL DEFAULT 0,
-  `IdUsuarioAnulacion` int(11) DEFAULT NULL,
-  `FechaAnulacion` datetime DEFAULT NULL,
-  PRIMARY KEY (`IdPago`),
-  KEY `FK_Pago_Reserva` (`IdReserva`),
-  KEY `FK_Pago_UsuarioCreacion` (`IdUsuarioCreacion`),
-  KEY `FK_Pago_UsuarioAnulacion` (`IdUsuarioAnulacion`),
-  CONSTRAINT `FK_Pago_Reserva` FOREIGN KEY (`IdReserva`) REFERENCES `reserva` (`IdReserva`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `FK_Pago_UsuarioAnulacion` FOREIGN KEY (`IdUsuarioAnulacion`) REFERENCES `usuario` (`IdUsuario`) ON DELETE RESTRICT ON UPDATE CASCADE,
-  CONSTRAINT `FK_Pago_UsuarioCreacion` FOREIGN KEY (`IdUsuarioCreacion`) REFERENCES `usuario` (`IdUsuario`) ON DELETE RESTRICT ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+-- ==========================================
+-- DATOS DE PRUEBA INICIALES
+-- ==========================================
+INSERT INTO TipoInmueble (Descripcion) VALUES 
+('Casa'), ('Departamento'), ('Monoambiente'), ('Loft');
 
--- Usuario inicial
-INSERT INTO `usuario` (`IdUsuario`, `Email`, `PasswordHash`, `NombreCompleto`, `Rol`) 
-VALUES (1, 'admin@inmobiliaria.com', 'hash_provisorio', 'Administrador General', 'administrador');
+INSERT INTO Propietario (Nombre, Apellido, Dni, Email, Telefono) VALUES 
+('Juan', 'Pérez', '20123456', 'juan.perez@email.com', '11-1234-5678');
+
+INSERT INTO Inquilino (Dni, NombreCompleto, Telefono, Email) VALUES 
+('30111222', 'Carlos López', '11-2222-3333', 'carlos.lopez@email.com');
+
+INSERT INTO Usuario (Email, PasswordHash, NombreCompleto, Rol) VALUES 
+('admin@inmobiliaria.com', 'hash_de_contraseña', 'Administrador Principal', 'administrador');

@@ -9,9 +9,10 @@
 <hr />
 <div class="row">
     <div class="col-md-8">
-        <form asp-action="Edit">
+        <form asp-action="Edit" enctype="multipart/form-data">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <input type="hidden" asp-for="IdInmueble" />
+            <input type="hidden" asp-for="ImagenPortada" />
 
             <div class="form-group mb-3">
                 <label asp-for="IdPropietario" class="control-label"></label>
@@ -54,9 +55,22 @@
             </div>
 
             <div class="form-group mb-3">
-                <label asp-for="ImagenPortada" class="control-label"></label>
-                <input asp-for="ImagenPortada" class="form-control" />
-                <span asp-validation-for="ImagenPortada" class="text-danger"></span>
+                <label class="control-label">Imagen actual</label><br />
+                @if (!string.IsNullOrEmpty(Model.ImagenPortada))
+                {
+                    <img src="@Model.ImagenPortada" alt="Imagen del inmueble" class="img-thumbnail mb-2" style="max-width: 200px;" />
+                }
+                else
+                {
+                    <div class="text-muted mb-2">Sin imagen cargada</div>
+                }
+            </div>
+
+            <div class="form-group mb-3">
+                <label asp-for="ImagenFile" class="control-label">Cambiar imagen (opcional)</label>
+                <input asp-for="ImagenFile" type="file" class="form-control" accept="image/jpeg,image/png,image/webp,image/gif" />
+                <span asp-validation-for="ImagenFile" class="text-danger"></span>
+                <small class="form-text text-muted">Dejá este campo vacío si no querés cambiar la imagen. Formatos: JPG, PNG, WEBP, GIF. Máximo 5 MB.</small>
             </div>
 
             <div class="form-group mb-3 form-check">
