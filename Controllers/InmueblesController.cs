@@ -65,7 +65,7 @@ namespace Inmobiliaria.Controllers
             return View();
         }
 
-        // POST: Inmuebles/Create
+                // POST: Inmuebles/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult Create(Inmueble i)
@@ -78,13 +78,23 @@ namespace Inmobiliaria.Controllers
 
             try
             {
-                var rutaImagen = GuardarImagen(i.ImagenFile);
-                i.ImagenPortada = rutaImagen;
-                repositorioInmueble.Alta(i);
+                // 1. Guardamos el inmueble y capturamos el nuevo ID (si el repositorio lo devuelve)
+                int nuevoId = repositorioInmueble.Alta(i);
+                
+                // 2. Aseguramos que el objeto tenga el ID correcto (por si el repositorio no lo actualizó por referencia)
+                if (nuevoId > 0) 
+                {
+                    i.IdInmueble = nuevoId;
+                }
 
-                // Si cargaron portada al crear, queda también como la primera
-                // foto de la galería de ese inmueble.
-                if (rutaImagen != null)
+                   var rutaImagen = GuardarImagen(i.ImagenFile);
+                i.ImagenPortada = rutaImagen;
+                
+                // Actualizamos la portada en la base de datos
+                repositorioInmueble.Modificacion(i); 
+
+                // 3. Si cargaron portada al crear, queda también como la primera foto de la galería
+                if (!string.IsNullOrEmpty(rutaImagen))
                 {
                     repositorioImagenInmueble.Alta(new ImagenInmueble
                     {
