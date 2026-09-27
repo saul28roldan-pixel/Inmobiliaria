@@ -1,0 +1,76 @@
+@model IList<Inmobiliaria.Models.ImagenInmueble>
+@{
+    var inmueble = (Inmobiliaria.Models.Inmueble)ViewBag.Inmueble;
+    ViewData["Title"] = "Fotos del Inmueble";
+}
+
+<h1>Fotos del Inmueble</h1>
+<p class="text-muted">@inmueble.Direccion</p>
+
+<hr />
+
+@if (TempData["Mensaje"] != null)
+{
+    <div class="alert alert-success">@TempData["Mensaje"]</div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+
+<div class="row mb-4">
+    <div class="col-md-8">
+        <form asp-action="AgregarImagenes" enctype="multipart/form-data">
+            <input type="hidden" name="idInmueble" value="@inmueble.IdInmueble" />
+            <div class="form-group mb-2">
+                <label class="control-label">Agregar fotos</label>
+                <input type="file" name="archivos" class="form-control" multiple accept="image/jpeg,image/png,image/webp,image/gif" />
+                <small class="form-text text-muted">Podés seleccionar varias a la vez. JPG, PNG, WEBP o GIF, máximo 5 MB cada una.</small>
+            </div>
+            <button type="submit" class="btn btn-primary">Subir</button>
+        </form>
+    </div>
+</div>
+
+@if (!Model.Any())
+{
+    <p>Este inmueble todavía no tiene fotos cargadas.</p>
+}
+else
+{
+    <div class="row row-cols-1 row-cols-md-3 g-3">
+        @foreach (var img in Model)
+        {
+            <div class="col">
+                <div class="card h-100">
+                    <img src="@img.RutaUrl" class="card-img-top" alt="Foto del inmueble" style="height: 200px; object-fit: cover;" />
+                    <div class="card-body d-flex flex-column">
+                        @if (img.EsPortada)
+                        {
+                            <span class="badge bg-success mb-2">Portada actual</span>
+                        }
+                        <div class="mt-auto d-flex gap-2">
+                            @if (!img.EsPortada)
+                            {
+                                <form asp-action="MarcarPortada" class="d-inline">
+                                    <input type="hidden" name="idImagen" value="@img.IdImagen" />
+                                    <input type="hidden" name="idInmueble" value="@inmueble.IdInmueble" />
+                                    <button type="submit" class="btn btn-sm btn-outline-primary">Usar como portada</button>
+                                </form>
+                            }
+                            <form asp-action="EliminarImagen" class="d-inline" onsubmit="return confirm('¿Eliminar esta foto?');">
+                                <input type="hidden" name="idImagen" value="@img.IdImagen" />
+                                <input type="hidden" name="idInmueble" value="@inmueble.IdInmueble" />
+                                <button type="submit" class="btn btn-sm btn-outline-danger">Eliminar</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+<div class="mt-4">
+    <a asp-action="Details" asp-route-id="@inmueble.IdInmueble" class="btn btn-secondary">Volver al inmueble</a>
+</div>
