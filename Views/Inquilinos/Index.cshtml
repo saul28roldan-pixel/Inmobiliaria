@@ -5,7 +5,17 @@
 }
 
 <h1>Listado de Inquilinos</h1>
-
+<!-- BARRA DE BÚSQUEDA -->
+<form asp-action="Index" method="get" class="mb-4">
+    <div class="input-group">
+        <input type="text" name="busqueda" class="form-control" placeholder="Buscar por nombre o DNI..." value="@ViewBag.BusquedaActual" />
+        <button type="submit" class="btn btn-primary">🔍 Buscar</button>
+        @if (!string.IsNullOrEmpty(ViewBag.BusquedaActual))
+        {
+            <a asp-action="Index" class="btn btn-outline-secondary">Limpiar</a>
+        }
+    </div>
+</form>
 <p>
     <a asp-action="Create" class="btn btn-primary">Crear Nuevo Inquilino</a>
 </p>

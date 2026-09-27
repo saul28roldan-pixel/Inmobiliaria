@@ -1,23 +1,37 @@
+using System.Linq;
+using Microsoft.AspNetCore.Authorization; // Agregado para [Authorize]
 using Microsoft.AspNetCore.Mvc;
 using Inmobiliaria.Models;
 
 namespace Inmobiliaria.Controllers
 {
+    [Authorize] // Agregado: Protege todo el controlador
     public class InquilinosController : Controller
     {
         private readonly IRepositorioInquilino repositorio;
 
-        // El framework inyecta automáticamente la implementación
-        // registrada en Program.cs (AddScoped<IRepositorioInquilino, RepositorioInquilino>)
         public InquilinosController(IRepositorioInquilino repositorio)
         {
             this.repositorio = repositorio;
         }
 
-        // GET: Inquilinos
-        public IActionResult Index()
+        // GET: Inquilinos (CON BÚSQUEDA)
+        public IActionResult Index(string? busqueda)
         {
             var lista = repositorio.ObtenerTodos();
+
+            // Si el usuario escribió algo, filtramos por Nombre o DNI
+            if (!string.IsNullOrEmpty(busqueda))
+            {
+                lista = lista.Where(i => 
+                    i.NombreCompleto.Contains(busqueda, StringComparison.OrdinalIgnoreCase) ||
+                    i.Dni.Contains(busqueda, StringComparison.OrdinalIgnoreCase)
+                ).ToList();
+            }
+
+            // Guardamos el término para que el input no se borre al recargar
+            ViewBag.BusquedaActual = busqueda;
+            
             return View(lista);
         }
 
@@ -50,6 +64,17 @@ namespace Inmobiliaria.Controllers
             }
         }
 
+        // GET: Inquilinos/Details/5
+        public IActionResult Details(int id)
+        {
+            var inquilino = repositorio.ObtenerPorId(id);
+            if (inquilino == null)
+            {
+                return NotFound();
+            }
+            return View(inquilino);
+        }
+
         // GET: Inquilinos/Edit/5
         public IActionResult Edit(int id)
         {
@@ -60,16 +85,7 @@ namespace Inmobiliaria.Controllers
             }
             return View(i);
         }
-        // GET: Inquilinos/Details/5
-        public IActionResult Details(int id)
-        {
-            var inquilino = repositorio.ObtenerPorId(id);
-            if (inquilino == null)
-           {
-               return NotFound();
-           }
-           return View(inquilino);
-   }
+
         // POST: Inquilinos/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]

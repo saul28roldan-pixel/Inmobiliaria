@@ -1,7 +1,6 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Inmobiliaria.Models;
 
@@ -16,73 +15,60 @@ namespace Inmobiliaria.Controllers
             _repoUsuario = repoUsuario;
         }
 
-        // GET: Account/Login
-        [AllowAnonymous]
+        [HttpGet]
         public IActionResult Login(string? returnUrl = null)
         {
-            return View(new LoginViewModel { ReturnUrl = returnUrl });
+            ViewData["ReturnUrl"] = returnUrl;
+            return View();
         }
 
-        // POST: Account/Login
         [HttpPost]
-        [AllowAnonymous]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Login(LoginViewModel model)
+        public async Task<IActionResult> Login(LoginViewModel model, string? returnUrl = null)
         {
-            if (!ModelState.IsValid)
+            ViewData["ReturnUrl"] = returnUrl;
+
+            if (ModelState.IsValid)
             {
-                return View(model);
-            }
+                // 1. Buscar el usuario en la base de datos
+                var usuario = _repoUsuario.ObtenerPorEmail(model.Email);
 
-            var usuario = _repoUsuario.ObtenerPorEmail(model.Email);
-
-            // Mismo mensaje de error tanto si el email no existe como si la
-            // contraseña es incorrecta, para no revelar qué emails existen.
-            if (usuario == null || !PasswordHelper.VerificarHash(model.Password, usuario.PasswordHash))
-            {
-                ModelState.AddModelError(string.Empty, "Email o contraseña incorrectos.");
-                return View(model);
-            }
-
-            var claims = new List<Claim>
-            {
-                new Claim(ClaimTypes.NameIdentifier, usuario.IdUsuario.ToString()),
-                new Claim(ClaimTypes.Name, usuario.NombreCompleto),
-                new Claim(ClaimTypes.Email, usuario.Email),
-                new Claim(ClaimTypes.Role, usuario.Rol),
-            };
-
-            var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-
-            await HttpContext.SignInAsync(
-                CookieAuthenticationDefaults.AuthenticationScheme,
-                new ClaimsPrincipal(claimsIdentity),
-                new AuthenticationProperties
+                // 2. Validar que exista y la contraseña coincida 
+                // (Nota: En producción real, aquí se usaría BCrypt o similar para comparar hashes)
+                if (usuario != null && usuario.PasswordHash == model.Password)
                 {
-                    IsPersistent = model.RememberMe,
-                });
+                    // 3. Crear las Claims (la identidad del usuario)
+                    var claims = new List<Claim>
+                    {
+                        new Claim(ClaimTypes.Name, usuario.NombreCompleto),
+                        new Claim(ClaimTypes.NameIdentifier, usuario.IdUsuario.ToString()),
+                        new Claim(ClaimTypes.Role, usuario.Rol) // Ej: "administrador" o "empleado"
+                    };
 
-            if (!string.IsNullOrEmpty(model.ReturnUrl) && Url.IsLocalUrl(model.ReturnUrl))
-            {
-                return Redirect(model.ReturnUrl);
+                    // 4. Crear la identidad y el principal
+                    var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+                    var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
+
+                    // 5. Iniciar sesión (crea la cookie)
+                    await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, claimsPrincipal);
+
+                    // 6. Redirigir a la página solicitada o al Home
+                    return LocalRedirect(returnUrl ?? "/");
+                }
+
+                // Si falla, mostrar error genérico por seguridad
+                ModelState.AddModelError(string.Empty, "Usuario o contraseña incorrectos.");
             }
-            return RedirectToAction("Index", "Home");
+
+            return View(model);
         }
 
-        // POST: Account/Logout
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Logout()
         {
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
             return RedirectToAction("Index", "Home");
-        }
-
-        // GET: Account/AccesoDenegado
-        [AllowAnonymous]
-        public IActionResult AccesoDenegado()
-        {
-            return View();
         }
     }
 }

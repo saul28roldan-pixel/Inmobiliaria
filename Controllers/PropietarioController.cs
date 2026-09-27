@@ -1,23 +1,38 @@
+using System.Linq;
+using Microsoft.AspNetCore.Authorization; // Agregado para [Authorize]
 using Microsoft.AspNetCore.Mvc;
 using Inmobiliaria.Models;
 
 namespace Inmobiliaria.Controllers
 {
+    [Authorize] // Agregado: Protege todo el controlador
     public class PropietariosController : Controller
     {
         private readonly IRepositorioPropietario repositorio;
 
-        // El framework inyecta automáticamente la implementación
-        // registrada en Program.cs (AddScoped<IRepositorioPropietario, RepositorioPropietario>)
         public PropietariosController(IRepositorioPropietario repositorio)
         {
             this.repositorio = repositorio;
         }
 
-        // GET: Propietarios
-        public IActionResult Index()
+        // GET: Propietarios (CON BÚSQUEDA)
+        public IActionResult Index(string? busqueda)
         {
             var lista = repositorio.ObtenerTodos();
+
+            // Si el usuario escribió algo, filtramos por Nombre, Apellido o DNI
+            if (!string.IsNullOrEmpty(busqueda))
+            {
+                lista = lista.Where(p => 
+                    p.Nombre.Contains(busqueda, StringComparison.OrdinalIgnoreCase) ||
+                    p.Apellido.Contains(busqueda, StringComparison.OrdinalIgnoreCase) ||
+                    p.Dni.Contains(busqueda, StringComparison.OrdinalIgnoreCase)
+                ).ToList();
+            }
+
+            // Guardamos el término para que el input no se borre al recargar
+            ViewBag.BusquedaActual = busqueda;
+            
             return View(lista);
         }
 
@@ -48,6 +63,17 @@ namespace Inmobiliaria.Controllers
                 ViewBag.Error = "No se pudo crear el propietario: " + ex.Message;
                 return View(p);
             }
+        }
+
+        // GET: Propietarios/Details/5
+        public IActionResult Details(int id)
+        {
+            var propietario = repositorio.ObtenerPorId(id);
+            if (propietario == null)
+            {
+                return NotFound();
+            }
+            return View(propietario);
         }
 
         // GET: Propietarios/Edit/5
@@ -99,16 +125,7 @@ namespace Inmobiliaria.Controllers
             }
             return View(p);
         }
-        // GET: Propietarios/Details/5
-      public IActionResult Details(int id)
-      {
-           var propietario = repositorio.ObtenerPorId(id);
-           if (propietario == null)
-           {
-                return NotFound();
-           }
-           return View(propietario);
-        }
+
         // POST: Propietarios/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]

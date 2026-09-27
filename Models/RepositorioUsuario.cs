@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Microsoft.Extensions.Configuration;
 using MySqlConnector;
 
@@ -7,6 +8,27 @@ namespace Inmobiliaria.Models
     {
         public RepositorioUsuario(IConfiguration configuration) : base(configuration)
         {
+        }
+
+        public List<Usuario> ObtenerTodos()
+        {
+            var lista = new List<Usuario>();
+            using (var connection = ObtenerConexion())
+            {
+                var sql = "SELECT IdUsuario, Email, PasswordHash, NombreCompleto, Rol, Avatar FROM Usuario;";
+                using (var command = new MySqlCommand(sql, connection))
+                {
+                    connection.Open();
+                    using (var reader = command.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            lista.Add(MapearUsuario(reader));
+                        }
+                    }
+                }
+            }
+            return lista;
         }
 
         public Usuario? ObtenerPorEmail(string email)
@@ -57,6 +79,60 @@ namespace Inmobiliaria.Models
                 }
             }
             return u;
+        }
+
+        public void Alta(Usuario usuario)
+        {
+            using (var connection = ObtenerConexion())
+            {
+                var sql = @"INSERT INTO Usuario (Email, PasswordHash, NombreCompleto, Rol, Avatar) 
+                            VALUES (@Email, @PasswordHash, @NombreCompleto, @Rol, @Avatar);";
+                using (var command = new MySqlCommand(sql, connection))
+                {
+                    command.Parameters.AddWithValue("@Email", usuario.Email);
+                    command.Parameters.AddWithValue("@PasswordHash", usuario.PasswordHash);
+                    command.Parameters.AddWithValue("@NombreCompleto", usuario.NombreCompleto);
+                    command.Parameters.AddWithValue("@Rol", usuario.Rol);
+                    command.Parameters.AddWithValue("@Avatar", (object)usuario.Avatar ?? DBNull.Value);
+                    connection.Open();
+                    command.ExecuteNonQuery();
+                }
+            }
+        }
+
+        public void Modificacion(Usuario usuario)
+        {
+            using (var connection = ObtenerConexion())
+            {
+                var sql = @"UPDATE Usuario SET Email = @Email, PasswordHash = @PasswordHash, 
+                            NombreCompleto = @NombreCompleto, Rol = @Rol, Avatar = @Avatar 
+                            WHERE IdUsuario = @IdUsuario;";
+                using (var command = new MySqlCommand(sql, connection))
+                {
+                    command.Parameters.AddWithValue("@IdUsuario", usuario.IdUsuario);
+                    command.Parameters.AddWithValue("@Email", usuario.Email);
+                    command.Parameters.AddWithValue("@PasswordHash", usuario.PasswordHash);
+                    command.Parameters.AddWithValue("@NombreCompleto", usuario.NombreCompleto);
+                    command.Parameters.AddWithValue("@Rol", usuario.Rol);
+                    command.Parameters.AddWithValue("@Avatar", (object)usuario.Avatar ?? DBNull.Value);
+                    connection.Open();
+                    command.ExecuteNonQuery();
+                }
+            }
+        }
+
+        public void Baja(int id)
+        {
+            using (var connection = ObtenerConexion())
+            {
+                var sql = "DELETE FROM Usuario WHERE IdUsuario = @IdUsuario;";
+                using (var command = new MySqlCommand(sql, connection))
+                {
+                    command.Parameters.AddWithValue("@IdUsuario", id);
+                    connection.Open();
+                    command.ExecuteNonQuery();
+                }
+            }
         }
 
         private static Usuario MapearUsuario(MySqlDataReader reader)

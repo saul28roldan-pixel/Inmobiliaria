@@ -5,7 +5,17 @@
 }
 
 <h1>Listado de Inmuebles</h1>
-
+<!--  BARRA DE BÚSQUEDA -->
+<form asp-action="Index" method="get" class="mb-4">
+    <div class="input-group">
+        <input type="text" name="busqueda" class="form-control" placeholder="Buscar por dirección o propietario..." value="@ViewBag.BusquedaActual" />
+        <button type="submit" class="btn btn-primary">🔍 Buscar</button>
+        @if (!string.IsNullOrEmpty(ViewBag.BusquedaActual))
+        {
+            <a asp-action="Index" class="btn btn-outline-secondary">Limpiar</a>
+        }
+    </div>
+</form>
 <p>
     <a asp-action="Create" class="btn btn-primary">Crear Nuevo Inmueble</a>
 </p>
@@ -52,6 +62,7 @@
             <td>
                 <a asp-action="Details" asp-route-id="@item.IdInmueble" class="btn btn-sm btn-info">Detalles</a>
                 <a asp-action="Edit" asp-route-id="@item.IdInmueble" class="btn btn-sm btn-warning">Editar</a>
+                <a asp-action="Imagenes" asp-route-id="@item.IdInmueble" class="btn btn-sm btn-outline-primary">Fotos</a>
                 <a asp-action="Delete" asp-route-id="@item.IdInmueble" class="btn btn-sm btn-danger">Eliminar</a>
             </td>
         </tr>

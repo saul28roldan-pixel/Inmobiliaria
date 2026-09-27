@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Http;
 
 namespace Inmobiliaria.Models
 {
@@ -35,8 +36,13 @@ namespace Inmobiliaria.Models
         public decimal PrecioPorDia { get; set; }
 
         [StringLength(255)]
-        [Display(Name = "URL de Imagen de Portada")]
+        [Display(Name = "Imagen de Portada")]
         public string? ImagenPortada { get; set; }
+
+        // No se persiste en la base: es el archivo que llega del formulario
+        // al crear/editar. El controller lo procesa y arma ImagenPortada.
+        [Display(Name = "Imagen de Portada")]
+        public IFormFile? ImagenFile { get; set; }
 
         [Display(Name = "Disponible para Alquiler")]
         public bool Disponible { get; set; } = true;

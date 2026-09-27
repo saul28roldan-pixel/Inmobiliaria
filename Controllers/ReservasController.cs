@@ -6,7 +6,7 @@ using Inmobiliaria.Models;
 
 namespace Inmobiliaria.Controllers
 {
-    // ✅ REQUISITO DEL PDF: Protege todo el controlador requiriendo autenticación
+    // ✅ AUTORIZACIÓN ACTIVADA: Requiere que el usuario esté logueado
     [Authorize] 
     public class ReservasController : Controller
     {
@@ -30,15 +30,11 @@ namespace Inmobiliaria.Controllers
             return View(lista);
         }
 
-        // ✅ NUEVO: Acción de Informe para cumplir con el requisito de la narrativa
         public IActionResult Informe()
         {
             var todasLasReservas = _repoReserva.ObtenerTodos();
-            
-            // Filtramos reservas que aún no han finalizado (lógica básica de reporte)
             var reservasActivas = todasLasReservas.Where(r => r.FechaHasta >= System.DateTime.Today).ToList();
             
-            // Cálculos para el informe
             ViewBag.TotalReservasActivas = reservasActivas.Count;
             ViewBag.MontoTotalEstimado = reservasActivas.Sum(r => r.MontoDiario * (r.FechaHasta - r.FechaDesde).Days);
 
@@ -55,8 +51,6 @@ namespace Inmobiliaria.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult Create(Reserva reserva)
         {
-            // Se toma el ID del usuario logueado (viene del cookie de autenticación),
-            // ya no queda hardcodeado en 1.
             reserva.IdUsuarioCreacion = ObtenerIdUsuarioActual();
 
             if (ModelState.IsValid)
@@ -69,8 +63,6 @@ namespace Inmobiliaria.Controllers
                 }
                 catch (Exception ex)
                 {
-                    // Antes esta excepción (ej: fechas superpuestas) no se
-                    // capturaba y tiraba un error 500. Ahora se muestra en la vista.
                     ViewBag.Error = ex.Message;
                 }
             }
@@ -130,7 +122,6 @@ namespace Inmobiliaria.Controllers
             ViewBag.Inmuebles = new SelectList(_repoInmueble.ObtenerTodos(), "IdInmueble", "Direccion");
         }
 
-        // Lee el Id del usuario logueado desde los claims del cookie de autenticación.
         private int ObtenerIdUsuarioActual()
         {
             var idClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
