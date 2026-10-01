@@ -29,8 +29,16 @@ namespace Inmobiliaria.Models
             if (partes.Length != 3) return false;
 
             if (!int.TryParse(partes[0], out int iteraciones)) return false;
-            byte[] sal = Convert.FromBase64String(partes[1]);
-            byte[] hashGuardado = Convert.FromBase64String(partes[2]);
+            byte[] sal, hashGuardado;
+            try
+            {
+                sal = Convert.FromBase64String(partes[1]);
+                hashGuardado = Convert.FromBase64String(partes[2]);
+            }
+            catch (FormatException)
+            {
+                return false; // hash corrupto o en formato viejo
+            }
 
             byte[] hashIngresado = Rfc2898DeriveBytes.Pbkdf2(password, sal, iteraciones, HashAlgorithmName.SHA256, hashGuardado.Length);
 

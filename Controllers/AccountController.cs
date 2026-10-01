@@ -33,9 +33,8 @@ namespace Inmobiliaria.Controllers
                 // 1. Buscar el usuario en la base de datos
                 var usuario = _repoUsuario.ObtenerPorEmail(model.Email);
 
-                // 2. Validar que exista y la contraseña coincida 
-                // (Nota: En producción real, aquí se usaría BCrypt o similar para comparar hashes)
-                if (usuario != null && usuario.PasswordHash == model.Password)
+                // 2. Validar que exista y que la contraseña coincida con el hash guardado
+                if (usuario != null && PasswordHelper.VerificarHash(model.Password, usuario.PasswordHash))
                 {
                     // 3. Crear las Claims (la identidad del usuario)
                     var claims = new List<Claim>

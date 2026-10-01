@@ -1,14 +1,23 @@
-CREATE DATABASE IF NOT EXISTS InmobiliariaDB;
+-- ==========================================================
+--  INMOBILIARIA - Script único de base de datos
+--  Se puede correr varias veces sin romper nada:
+--    * crea lo que falta (tablas con IF NOT EXISTS)
+--    * no duplica datos de prueba
+--    * deja los usuarios de prueba con contraseña hasheada
+-- ==========================================================
+
+CREATE DATABASE IF NOT EXISTS InmobiliariaDB
+    CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE InmobiliariaDB;
 
--- 1. Tabla TipoInmueble (para el ABM de tipos)
-CREATE TABLE TipoInmueble (
+-- 1. Tipos de inmueble (para el ABM de tipos)
+CREATE TABLE IF NOT EXISTS TipoInmueble (
     IdTipo INT AUTO_INCREMENT PRIMARY KEY,
     Descripcion VARCHAR(100) NOT NULL UNIQUE
 );
 
--- 2. Tabla Propietario
-CREATE TABLE Propietario (
+-- 2. Propietarios
+CREATE TABLE IF NOT EXISTS Propietario (
     IdPropietario INT AUTO_INCREMENT PRIMARY KEY,
     Nombre VARCHAR(100) NOT NULL,
     Apellido VARCHAR(100) NOT NULL,
@@ -17,8 +26,8 @@ CREATE TABLE Propietario (
     Telefono VARCHAR(50)
 );
 
--- 3. Tabla Inquilino
-CREATE TABLE Inquilino (
+-- 3. Inquilinos
+CREATE TABLE IF NOT EXISTS Inquilino (
     IdInquilino INT AUTO_INCREMENT PRIMARY KEY,
     Dni VARCHAR(20) NOT NULL UNIQUE,
     NombreCompleto VARCHAR(150) NOT NULL,
@@ -26,8 +35,8 @@ CREATE TABLE Inquilino (
     Email VARCHAR(150)
 );
 
--- 4. Tabla Usuario (Roles: administrador, empleado)
-CREATE TABLE Usuario (
+-- 4. Usuarios del sistema (roles: administrador, empleado)
+CREATE TABLE IF NOT EXISTS Usuario (
     IdUsuario INT AUTO_INCREMENT PRIMARY KEY,
     Email VARCHAR(150) NOT NULL UNIQUE,
     PasswordHash VARCHAR(255) NOT NULL,
@@ -36,8 +45,8 @@ CREATE TABLE Usuario (
     Avatar VARCHAR(255)
 );
 
--- 5. Tabla Inmueble
-CREATE TABLE Inmueble (
+-- 5. Inmuebles
+CREATE TABLE IF NOT EXISTS Inmueble (
     IdInmueble INT AUTO_INCREMENT PRIMARY KEY,
     IdPropietario INT NOT NULL,
     IdTipo INT NOT NULL,
@@ -51,8 +60,20 @@ CREATE TABLE Inmueble (
     FOREIGN KEY (IdTipo) REFERENCES TipoInmueble(IdTipo)
 );
 
--- 6. Tabla Reserva
-CREATE TABLE Reserva (
+-- 6. Galería de imágenes de cada inmueble
+--    (la usa RepositorioImagenInmueble; el nombre va en minúsculas
+--     porque así está escrito en el código)
+--    ON DELETE CASCADE: al borrar un inmueble se borran sus filas de imágenes.
+CREATE TABLE IF NOT EXISTS inmuebleimagen (
+    IdImagen INT AUTO_INCREMENT PRIMARY KEY,
+    IdInmueble INT NOT NULL,
+    RutaUrl VARCHAR(255) NOT NULL,
+    EsPortada BOOLEAN NOT NULL DEFAULT FALSE,
+    FOREIGN KEY (IdInmueble) REFERENCES Inmueble(IdInmueble) ON DELETE CASCADE
+);
+
+-- 7. Reservas
+CREATE TABLE IF NOT EXISTS Reserva (
     IdReserva INT AUTO_INCREMENT PRIMARY KEY,
     IdInquilino INT NOT NULL,
     IdInmueble INT NOT NULL,
@@ -69,8 +90,8 @@ CREATE TABLE Reserva (
     FOREIGN KEY (IdUsuarioFinalizacion) REFERENCES Usuario(IdUsuario)
 );
 
--- 7. Tabla Pago
-CREATE TABLE Pago (
+-- 8. Pagos de cada reserva
+CREATE TABLE IF NOT EXISTS Pago (
     IdPago INT AUTO_INCREMENT PRIMARY KEY,
     IdReserva INT NOT NULL,
     IdUsuarioCreacion INT NOT NULL,
@@ -85,17 +106,28 @@ CREATE TABLE Pago (
     FOREIGN KEY (IdUsuarioAnulacion) REFERENCES Usuario(IdUsuario)
 );
 
--- ==========================================
--- DATOS DE PRUEBA INICIALES
--- ==========================================
-INSERT INTO TipoInmueble (Descripcion) VALUES 
+-- ==========================================================
+--  DATOS DE PRUEBA
+--  (INSERT IGNORE: si ya existen, los salta sin dar error)
+-- ==========================================================
+INSERT IGNORE INTO TipoInmueble (Descripcion) VALUES
 ('Casa'), ('Departamento'), ('Monoambiente'), ('Loft');
 
-INSERT INTO Propietario (Nombre, Apellido, Dni, Email, Telefono) VALUES 
+INSERT IGNORE INTO Propietario (Nombre, Apellido, Dni, Email, Telefono) VALUES
 ('Juan', 'Pérez', '20123456', 'juan.perez@email.com', '11-1234-5678');
 
-INSERT INTO Inquilino (Dni, NombreCompleto, Telefono, Email) VALUES 
+INSERT IGNORE INTO Inquilino (Dni, NombreCompleto, Telefono, Email) VALUES
 ('30111222', 'Carlos López', '11-2222-3333', 'carlos.lopez@email.com');
 
-INSERT INTO Usuario (Email, PasswordHash, NombreCompleto, Rol) VALUES 
-('admin@inmobiliaria.com', 'hash_de_contraseña', 'Administrador Principal', 'administrador');
+-- Usuarios de prueba. Contraseñas hasheadas con PBKDF2 (formato de PasswordHelper.cs):
+--   admin@inmobiliaria.com    -> admin123
+--   empleado@inmobiliaria.com -> empleado123
+-- Si el usuario ya existía (por ejemplo con el hash viejo), se le actualiza la contraseña.
+INSERT INTO Usuario (Email, PasswordHash, NombreCompleto, Rol) VALUES
+('admin@inmobiliaria.com',
+ '100000.M/py3J3QEDF68Aax9+sRIA==.eej0dMdewEO25vySpoYcc9NfED0SvljdXhxUwRH4L4A=',
+ 'Administrador Principal', 'administrador'),
+('empleado@inmobiliaria.com',
+ '100000.E/J04IF02pVM69pWuNDZ5A==.VpXoCZykRfQlMoGIhpoCIF5baY+qcU05uoL+eBYlJmM=',
+ 'Empleado de Prueba', 'empleado')
+ON DUPLICATE KEY UPDATE PasswordHash = VALUES(PasswordHash);
