@@ -1,0 +1,51 @@
+@model Inmobiliaria.Models.UsuarioViewModel
+@{ ViewData["Title"] = "Crear Usuario"; }
+
+<h1>➕ Crear Nuevo Usuario</h1>
+
+@if (ViewBag.Error != null) { <div class="alert alert-danger">@ViewBag.Error</div> }
+
+<form asp-action="Create" method="post">
+    @Html.AntiForgeryToken()
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+    <div class="form-group mb-3">
+        <label asp-for="Email" class="control-label"></label>
+        <input asp-for="Email" class="form-control" />
+        <span asp-validation-for="Email" class="text-danger"></span>
+    </div>
+
+    <div class="form-group mb-3">
+        <label asp-for="Password" class="control-label"></label>
+        <input asp-for="Password" class="form-control" />
+        <span asp-validation-for="Password" class="text-danger"></span>
+    </div>
+
+    <div class="form-group mb-3">
+        <label asp-for="NombreCompleto" class="control-label"></label>
+        <input asp-for="NombreCompleto" class="form-control" />
+        <span asp-validation-for="NombreCompleto" class="text-danger"></span>
+    </div>
+
+    <div class="form-group mb-3">
+        <label asp-for="Rol" class="control-label"></label>
+        <select asp-for="Rol" class="form-control">
+            <option value="administrador">Administrador</option>
+            <option value="empleado">Empleado</option>
+        </select>
+        <span asp-validation-for="Rol" class="text-danger"></span>
+    </div>
+
+    <div class="form-group mb-3">
+        <label asp-for="Avatar" class="control-label"></label>
+        <input asp-for="Avatar" class="form-control" />
+        <span asp-validation-for="Avatar" class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Crear</button>
+    <a asp-action="Index" class="btn btn-secondary">Volver</a>
+</form>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
