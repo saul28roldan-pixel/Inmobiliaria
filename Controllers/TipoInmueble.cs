@@ -1,11 +1,10 @@
-using System.Linq;
-using Microsoft.AspNetCore.Authorization; // Agregado para [Authorize]
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Inmobiliaria.Models;
 
 namespace Inmobiliaria.Controllers
 {
-    [Authorize] // Agregado: Protege todo el controlador
+    [Authorize]
     public class TipoInmuebleController : Controller
     {
         private readonly IRepositorioTipoInmueble repositorio;
@@ -15,113 +14,92 @@ namespace Inmobiliaria.Controllers
             this.repositorio = repositorio;
         }
 
-        // GET: TipoInmueble (CON BÚSQUEDA)
-        public IActionResult Index(string? busqueda)
+        // GET: TipoInmueble (CON BÚSQUEDA Y PAGINADO)
+        public IActionResult Index(string? busqueda, int pagina = 1)
         {
-            var lista = repositorio.ObtenerTodos();
+            int registrosPorPagina = 3;
 
-            // Si el usuario escribió algo, filtramos por Descripción
-            if (!string.IsNullOrEmpty(busqueda))
-            {
-                lista = lista.Where(t => 
-                    t.Descripcion.Contains(busqueda, StringComparison.OrdinalIgnoreCase)
-                ).ToList();
-            }
+            var lista = repositorio.ObtenerFiltradosPaginados(
+                busqueda, 
+                pagina, 
+                registrosPorPagina, 
+                out int totalRegistros
+            );
 
-            // Guardamos el término para que el input no se borre al recargar
             ViewBag.BusquedaActual = busqueda;
-            
+            ViewBag.PaginaActual = pagina;
+            ViewBag.TotalRegistros = totalRegistros;
+            ViewBag.TotalPaginas = (int)Math.Ceiling(totalRegistros / (double)registrosPorPagina);
+
             return View(lista);
         }
 
         // GET: TipoInmueble/Details/5
         public IActionResult Details(int id)
         {
-            var tipo = repositorio.ObtenerPorId(id);
-            if (tipo == null)
-            {
-                return NotFound();
-            }
-            return View(tipo);
+            var t = repositorio.ObtenerPorId(id);
+            if (t == null) return NotFound();
+            return View(t);
         }
 
         // GET: TipoInmueble/Create
-        public IActionResult Create()
-        {
-            return View();
-        }
+        public IActionResult Create() => View();
 
         // POST: TipoInmueble/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Create(TipoInmueble tipo)
+        public IActionResult Create(TipoInmueble t)
         {
-            if (!ModelState.IsValid)
-            {
-                return View(tipo);
-            }
+            if (!ModelState.IsValid) return View(t);
 
             try
             {
-                repositorio.Alta(tipo);
+                repositorio.Alta(t);
                 TempData["Mensaje"] = "Tipo de inmueble creado correctamente.";
                 return RedirectToAction(nameof(Index));
             }
-            catch (Exception ex)
+            catch
             {
-                ViewBag.Error = "No se pudo crear el tipo de inmueble: " + ex.Message;
-                return View(tipo);
+                ViewBag.Error = "No se pudo crear el tipo de inmueble.";
+                return View(t);
             }
         }
 
         // GET: TipoInmueble/Edit/5
         public IActionResult Edit(int id)
         {
-            var tipo = repositorio.ObtenerPorId(id);
-            if (tipo == null)
-            {
-                return NotFound();
-            }
-            return View(tipo);
+            var t = repositorio.ObtenerPorId(id);
+            if (t == null) return NotFound();
+            return View(t);
         }
 
         // POST: TipoInmueble/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Edit(int id, TipoInmueble tipo)
+        public IActionResult Edit(int id, TipoInmueble t)
         {
-            if (id != tipo.IdTipo)
-            {
-                return BadRequest();
-            }
-
-            if (!ModelState.IsValid)
-            {
-                return View(tipo);
-            }
+            if (id != t.IdTipo) return BadRequest();
+            if (!ModelState.IsValid) return View(t);
 
             try
             {
-                repositorio.Modificacion(tipo);
+                repositorio.Modificacion(t);
                 TempData["Mensaje"] = "Tipo de inmueble modificado correctamente.";
                 return RedirectToAction(nameof(Index));
             }
-            catch (Exception ex)
+            catch
             {
-                ViewBag.Error = "No se pudo modificar el tipo de inmueble: " + ex.Message;
-                return View(tipo);
+                ViewBag.Error = "No se pudo modificar el tipo de inmueble.";
+                return View(t);
             }
         }
 
         // GET: TipoInmueble/Delete/5
         public IActionResult Delete(int id)
         {
-            var tipo = repositorio.ObtenerPorId(id);
-            if (tipo == null)
-            {
-                return NotFound();
-            }
-            return View(tipo);
+            var t = repositorio.ObtenerPorId(id);
+            if (t == null) return NotFound();
+            return View(t);
         }
 
         // POST: TipoInmueble/Delete/5
@@ -134,9 +112,9 @@ namespace Inmobiliaria.Controllers
                 repositorio.Baja(id);
                 TempData["Mensaje"] = "Tipo de inmueble eliminado correctamente.";
             }
-            catch (Exception ex)
+            catch
             {
-                TempData["Error"] = "No se pudo eliminar el tipo de inmueble: " + ex.Message;
+                TempData["Error"] = "No se puede eliminar: está asociado a inmuebles.";
             }
             return RedirectToAction(nameof(Index));
         }
