@@ -27,25 +27,37 @@ namespace Inmobiliaria.Controllers
             this.entorno = entorno;
         }
 
-        // GET: Inmuebles (CON BÚSQUEDA)
-        public IActionResult Index(string? busqueda)
-        {
-            var lista = repositorioInmueble.ObtenerTodos();
+        // GET: Inmuebles (CON BÚSQUEDA EN BD, DESPLEGABLE Y PAGINADO)
+public IActionResult Index(string? busqueda, int? idTipo, int pagina = 1)
+{
+    int registrosPorPagina = 10; // Mostramos 10 por página
+    
+    // Llamamos al repositorio para que filtre en la base de datos
+    var lista = repositorioInmueble.ObtenerFiltradosPaginados(
+        busqueda, 
+        idTipo, 
+        pagina, 
+        registrosPorPagina, 
+        out int totalRegistros
+    );
 
-            // Si el usuario escribió algo en el buscador, filtramos la lista
-                        if (!string.IsNullOrEmpty(busqueda))
-            {
-                lista = lista.Where(i => 
-                    i.Direccion.Contains(busqueda, StringComparison.OrdinalIgnoreCase) ||
-                    (!string.IsNullOrEmpty(i.NombrePropietario) && i.NombrePropietario.Contains(busqueda, StringComparison.OrdinalIgnoreCase))
-                ).ToList();
-            }
+    // Guardamos los valores en ViewBag para que la vista los recuerde y arme el paginado
+    ViewBag.BusquedaActual = busqueda;
+    ViewBag.IdTipoActual = idTipo;
+    ViewBag.PaginaActual = pagina;
+    ViewBag.TotalRegistros = totalRegistros;
+    ViewBag.TotalPaginas = (int)Math.Ceiling(totalRegistros / (double)registrosPorPagina);
+    
+    // Cargamos los tipos para el desplegable de búsqueda
+    ViewBag.TiposParaFiltro = repositorioTipoInmueble.ObtenerTodos().Select(t => new SelectListItem
+    {
+        Value = t.IdTipo.ToString(),
+        Text = t.Descripcion
+    }).ToList();
 
-            // Guardamos el término de búsqueda para que el input no se borre al recargar
-            ViewBag.BusquedaActual = busqueda;
-            
-            return View(lista);
-        }
+    return View(lista);
+}
+
 
         // GET: Inmuebles/Details/5
         public IActionResult Details(int id)

@@ -1,12 +1,12 @@
 using Microsoft.Extensions.Configuration;
 using MySqlConnector;
+using System;
 using System.Collections.Generic;
 
 namespace Inmobiliaria.Models
 {
     public class RepositorioInmueble : RepositorioBase, IRepositorioInmueble
     {
-        // Constructor corregido: recibe IConfiguration y se lo pasa a la clase base
         public RepositorioInmueble(IConfiguration configuration) : base(configuration) 
         { 
         }
@@ -46,7 +46,6 @@ namespace Inmobiliaria.Models
             {
                 var command = new MySqlCommand(sql, connection);
                 command.Parameters.AddWithValue("@id", id);
-
                 connection.Open();
                 filasAfectadas = command.ExecuteNonQuery();
             }
@@ -57,14 +56,9 @@ namespace Inmobiliaria.Models
         {
             int filasAfectadas = 0;
             string sql = @"UPDATE Inmueble
-                            SET IdPropietario = @idPropietario,
-                                IdTipo = @idTipo,
-                                Direccion = @direccion,
-                                Cupo = @cupo,
-                                Coordenadas = @coordenadas,
-                                PrecioPorDia = @precioPorDia,
-                                ImagenPortada = @imagenPortada,
-                                Disponible = @disponible
+                            SET IdPropietario = @idPropietario, IdTipo = @idTipo, Direccion = @direccion,
+                                Cupo = @cupo, Coordenadas = @coordenadas, PrecioPorDia = @precioPorDia,
+                                ImagenPortada = @imagenPortada, Disponible = @disponible
                             WHERE IdInmueble = @id";
 
             using (var connection = ObtenerConexion())
@@ -102,13 +96,9 @@ namespace Inmobiliaria.Models
             {
                 var command = new MySqlCommand(sql, connection);
                 connection.Open();
-
                 using (var reader = command.ExecuteReader())
                 {
-                    while (reader.Read())
-                    {
-                        lista.Add(MapearInmueble(reader));
-                    }
+                    while (reader.Read()) lista.Add(MapearInmueble(reader));
                 }
             }
             return lista;
@@ -130,18 +120,78 @@ namespace Inmobiliaria.Models
             {
                 var command = new MySqlCommand(sql, connection);
                 command.Parameters.AddWithValue("@id", id);
-
                 connection.Open();
-
                 using (var reader = command.ExecuteReader())
                 {
-                    if (reader.Read())
-                    {
-                        i = MapearInmueble(reader);
-                    }
+                    if (reader.Read()) i = MapearInmueble(reader);
                 }
             }
             return i;
+        }
+
+        // ==========================================================
+        // NUEVO MÉTODO: Filtrado y paginado directamente en la BD
+        // ==========================================================
+        public IList<Inmueble> ObtenerFiltradosPaginados(string? busqueda, int? idTipo, int pagina, int registrosPorPagina, out int totalRegistros)
+        {
+            totalRegistros = 0;
+            var lista = new List<Inmueble>();
+            var whereConditions = new List<string>();
+            
+            string sqlBase = @"FROM Inmueble i
+                               LEFT JOIN Propietario p ON i.IdPropietario = p.IdPropietario
+                               LEFT JOIN TipoInmueble t ON i.IdTipo = t.IdTipo";
+
+            using (var connection = ObtenerConexion())
+            {
+                connection.Open();
+
+                // 1. OBTENER EL TOTAL DE REGISTROS (para calcular páginas)
+                string sqlCount = "SELECT COUNT(*) " + sqlBase;
+                var cmdCount = new MySqlCommand { Connection = connection };
+
+                if (!string.IsNullOrWhiteSpace(busqueda))
+                {
+                    whereConditions.Add("(i.Direccion LIKE @busqueda OR CONCAT(p.Nombre, ' ', p.Apellido) LIKE @busqueda)");
+                    cmdCount.Parameters.AddWithValue("@busqueda", $"%{busqueda}%");
+                }
+                if (idTipo.HasValue && idTipo.Value > 0)
+                {
+                    whereConditions.Add("i.IdTipo = @idTipo");
+                    cmdCount.Parameters.AddWithValue("@idTipo", idTipo.Value);
+                }
+
+                string sqlWhere = whereConditions.Count > 0 ? " WHERE " + string.Join(" AND ", whereConditions) : "";
+                cmdCount.CommandText = sqlCount + sqlWhere;
+                totalRegistros = Convert.ToInt32(cmdCount.ExecuteScalar());
+
+                // 2. OBTENER LOS DATOS PAGINADOS (LIMIT y OFFSET)
+                string sqlData = @"SELECT i.IdInmueble, i.IdPropietario, i.IdTipo, i.Direccion, i.Cupo, 
+                                          i.Coordenadas, i.PrecioPorDia, i.ImagenPortada, i.Disponible,
+                                          CONCAT(p.Nombre, ' ', p.Apellido) AS NombrePropietario, 
+                                          t.Descripcion AS DescripcionTipo " + sqlBase + sqlWhere + @"
+                                   ORDER BY i.Direccion 
+                                   LIMIT @limit OFFSET @offset";
+
+                var cmdData = new MySqlCommand(sqlData, connection);
+                foreach (MySqlParameter param in cmdCount.Parameters)
+                {
+                    cmdData.Parameters.AddWithValue(param.ParameterName, param.Value);
+                }
+                
+                int offset = (pagina - 1) * registrosPorPagina;
+                cmdData.Parameters.AddWithValue("@limit", registrosPorPagina);
+                cmdData.Parameters.AddWithValue("@offset", offset);
+
+                using (var reader = cmdData.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        lista.Add(MapearInmueble(reader));
+                    }
+                }
+            }
+            return lista;
         }
 
         private static Inmueble MapearInmueble(MySqlDataReader reader)
