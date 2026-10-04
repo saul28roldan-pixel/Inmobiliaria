@@ -24,11 +24,25 @@ namespace Inmobiliaria.Controllers
             _repoInmueble = repoInmueble;
         }
 
-        public IActionResult Index()
-        {
-            var lista = _repoReserva.ObtenerTodos();
-            return View(lista);
-        }
+        // GET: Reservas (CON BÚSQUEDA EN BD Y PAGINADO)
+public IActionResult Index(string? busqueda, int pagina = 1)
+{
+    int registrosPorPagina = 10;
+
+    var lista = _repoReserva.ObtenerFiltradosPaginados(
+        busqueda, 
+        pagina, 
+        registrosPorPagina, 
+        out int totalRegistros
+    );
+
+    ViewBag.BusquedaActual = busqueda;
+    ViewBag.PaginaActual = pagina;
+    ViewBag.TotalRegistros = totalRegistros;
+    ViewBag.TotalPaginas = (int)Math.Ceiling(totalRegistros / (double)registrosPorPagina);
+
+    return View(lista);
+}
 
         public IActionResult Informe()
         {
