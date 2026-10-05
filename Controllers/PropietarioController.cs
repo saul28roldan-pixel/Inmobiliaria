@@ -16,25 +16,37 @@ namespace Inmobiliaria.Controllers
         }
 
         // GET: Propietarios (CON BÚSQUEDA)
-        public IActionResult Index(string? busqueda)
-        {
-            var lista = repositorio.ObtenerTodos();
+    public IActionResult Index(
+    string? busqueda,
+    int pagina = 1)
+{
+    int registrosPorPagina = 10;
 
-            // Si el usuario escribió algo, filtramos por Nombre, Apellido o DNI
-            if (!string.IsNullOrEmpty(busqueda))
-            {
-                lista = lista.Where(p => 
-                    p.Nombre.Contains(busqueda, StringComparison.OrdinalIgnoreCase) ||
-                    p.Apellido.Contains(busqueda, StringComparison.OrdinalIgnoreCase) ||
-                    p.Dni.Contains(busqueda, StringComparison.OrdinalIgnoreCase)
-                ).ToList();
-            }
+    if (pagina < 1)
+    {
+        pagina = 1;
+    }
 
-            // Guardamos el término para que el input no se borre al recargar
-            ViewBag.BusquedaActual = busqueda;
-            
-            return View(lista);
-        }
+    var lista =
+        repositorio.ObtenerFiltradosPaginados(
+            busqueda,
+            pagina,
+            registrosPorPagina,
+            out int totalRegistros
+        );
+
+    ViewBag.BusquedaActual = busqueda;
+    ViewBag.PaginaActual = pagina;
+    ViewBag.TotalRegistros = totalRegistros;
+
+    ViewBag.TotalPaginas =
+        (int)Math.Ceiling(
+            totalRegistros /
+            (double)registrosPorPagina
+        );
+
+    return View(lista);
+}
 
         // GET: Propietarios/Create
         public IActionResult Create()

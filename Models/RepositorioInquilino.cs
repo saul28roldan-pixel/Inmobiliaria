@@ -122,6 +122,96 @@ namespace Inmobiliaria.Models
             return i;
         }
 
+public IList<Inquilino> ObtenerFiltradosPaginados(
+    string? busqueda,
+    int pagina,
+    int registrosPorPagina,
+    out int totalRegistros)
+{
+    totalRegistros = 0;
+    var lista = new List<Inquilino>();
+
+    string sqlBase = @"FROM Inquilino";
+
+    using (var connection = ObtenerConexion())
+    {
+        connection.Open();
+
+        // ==========================================
+        // 1. CONTAR LOS REGISTROS QUE COINCIDEN
+        // ==========================================
+
+        string sqlCount = "SELECT COUNT(*) " + sqlBase;
+
+        var cmdCount = new MySqlCommand();
+        cmdCount.Connection = connection;
+
+        string sqlWhere = "";
+
+        if (!string.IsNullOrWhiteSpace(busqueda))
+        {
+            sqlWhere = @" WHERE NombreCompleto LIKE @busqueda";
+
+            cmdCount.Parameters.AddWithValue(
+                "@busqueda",
+                $"%{busqueda}%"
+            );
+        }
+
+        cmdCount.CommandText = sqlCount + sqlWhere;
+
+        totalRegistros = Convert.ToInt32(
+            cmdCount.ExecuteScalar()
+        );
+
+        // ==========================================
+        // 2. OBTENER SOLAMENTE LA PÁGINA ACTUAL
+        // ==========================================
+
+        string sqlData = @"
+            SELECT IdInquilino, NombreCompleto, Dni, Email, Telefono
+            " + sqlBase + sqlWhere + @"
+            ORDER BY NombreCompleto
+            LIMIT @limit OFFSET @offset";
+
+        var cmdData = new MySqlCommand(
+            sqlData,
+            connection
+        );
+
+        // Copiamos los parámetros utilizados
+        // en la consulta COUNT
+        foreach (MySqlParameter parametro in cmdCount.Parameters)
+        {
+            cmdData.Parameters.AddWithValue(
+                parametro.ParameterName,
+                parametro.Value
+            );
+        }
+
+        int offset = (pagina - 1) * registrosPorPagina;
+
+        cmdData.Parameters.AddWithValue(
+            "@limit",
+            registrosPorPagina
+        );
+
+        cmdData.Parameters.AddWithValue(
+            "@offset",
+            offset
+        );
+
+        using (var reader = cmdData.ExecuteReader())
+        {
+            while (reader.Read())
+            {
+                lista.Add(MapearInquilino(reader));
+            }
+        }
+    }
+
+    return lista;
+}
         private static Inquilino MapearInquilino(MySqlDataReader reader)
         {
             return new Inquilino

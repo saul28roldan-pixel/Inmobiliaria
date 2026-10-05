@@ -7,5 +7,11 @@ namespace Inmobiliaria.Models
         bool Modificacion(Propietario p);
         IList<Propietario> ObtenerTodos();
         Propietario? ObtenerPorId(int id);
+        IList<Propietario> ObtenerFiltradosPaginados(
+    string? busqueda,
+    int pagina,
+    int registrosPorPagina,
+    out int totalRegistros
+);
     }
 }
