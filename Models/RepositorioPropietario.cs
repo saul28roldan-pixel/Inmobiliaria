@@ -246,5 +246,44 @@ namespace Inmobiliaria.Models
 
     return lista;
 }
+    
+    public List<object> BuscarParaSelect(string termino, int maxResultados = 10)
+{
+    var resultados = new List<object>();
+
+    if (string.IsNullOrWhiteSpace(termino))
+        return resultados;
+
+    string sql = @"
+        SELECT IdPropietario AS id, 
+               CONCAT(Nombre, ' ', Apellido, ' - DNI: ', Dni) AS text
+        FROM Propietario
+        WHERE Nombre LIKE @q OR Apellido LIKE @q OR Dni LIKE @q
+        ORDER BY Apellido, Nombre
+        LIMIT @limit";
+
+    using (var connection = ObtenerConexion())
+    {
+        var command = new MySqlCommand(sql, connection);
+        command.Parameters.AddWithValue("@q", $"%{termino}%");
+        command.Parameters.AddWithValue("@limit", maxResultados);
+
+        connection.Open();
+        using (var reader = command.ExecuteReader())
+        {
+            while (reader.Read())
+            {
+                // Devolvemos un tipo anónimo con 'id' y 'text', 
+                // que es exactamente el formato que espera Select2
+                resultados.Add(new
+                {
+                    id = reader.GetInt32("id"),
+                    text = reader.GetString("text")
+                });
+            }
+        }
     }
+    return resultados;
+}
+}
 }

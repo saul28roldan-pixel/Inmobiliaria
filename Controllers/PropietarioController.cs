@@ -154,5 +154,14 @@ namespace Inmobiliaria.Controllers
             }
             return RedirectToAction(nameof(Index));
         }
+        // Endpoint para búsqueda AJAX de Select2
+[HttpGet]
+public IActionResult Buscar(string q)
+{
+    // 'q' es el término que escribe el usuario en el buscador
+    var resultados = repositorio.BuscarParaSelect(q, 10);
+    return Json(resultados);
     }
+    
+}
 }

@@ -13,5 +13,8 @@ namespace Inmobiliaria.Models
     int registrosPorPagina,
     out int totalRegistros
 );
+// Método para búsqueda AJAX con Select2 (devuelve solo id y texto)
+List<object> BuscarParaSelect(string termino, int maxResultados = 10);
     }
+    
 }
