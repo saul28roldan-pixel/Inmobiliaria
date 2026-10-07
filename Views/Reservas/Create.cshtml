@@ -14,20 +14,20 @@
     <div class="col-md-6">
         <form asp-action="Create" method="post">
             <div class="mb-3">
-                <label asp-for="IdInquilino" class="form-label">Inquilino</label>
-                <select asp-for="IdInquilino" class="form-select" asp-items="ViewBag.Inquilinos">
-                    <option value="">-- Seleccionar Inquilino --</option>
-                </select>
-                <span asp-validation-for="IdInquilino" class="text-danger"></span>
-            </div>
+    <label asp-for="IdInquilino" class="form-label">Inquilino</label>
+    <select asp-for="IdInquilino" id="selectInquilino" class="form-select">
+        <option value="">-- Buscar inquilino --</option>
+    </select>
+    <span asp-validation-for="IdInquilino" class="text-danger"></span>
+</div>
 
-            <div class="mb-3">
-                <label asp-for="IdInmueble" class="form-label">Inmueble</label>
-                <select asp-for="IdInmueble" class="form-select" asp-items="ViewBag.Inmuebles">
-                    <option value="">-- Seleccionar Inmueble --</option>
-                </select>
-                <span asp-validation-for="IdInmueble" class="text-danger"></span>
-            </div>
+<div class="mb-3">
+    <label asp-for="IdInmueble" class="form-label">Inmueble</label>
+    <select asp-for="IdInmueble" id="selectInmueble" class="form-select">
+        <option value="">-- Buscar inmueble --</option>
+    </select>
+    <span asp-validation-for="IdInmueble" class="text-danger"></span>
+</div>
 
             <div class="row">
                 <div class="col-md-6 mb-3">
@@ -53,3 +53,46 @@
         </form>
     </div>
 </div>
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    
+    <script>
+        $(document).ready(function() {
+            // Select2 para Inquilino
+            $('#selectInquilino').select2({
+                theme: 'bootstrap-5',
+                placeholder: 'Escriba nombre o DNI...',
+                minimumInputLength: 2,
+                delay: 300,
+                ajax: {
+                    url: '/Inquilinos/Buscar',
+                    dataType: 'json',
+                    data: function (params) {
+                        return { q: params.term };
+                    },
+                    processResults: function (data) {
+                        return { results: data };
+                    }
+                }
+            });
+
+            // Select2 para Inmueble
+            $('#selectInmueble').select2({
+                theme: 'bootstrap-5',
+                placeholder: 'Escriba dirección...',
+                minimumInputLength: 2,
+                delay: 300,
+                ajax: {
+                    url: '/Inmuebles/Buscar',
+                    dataType: 'json',
+                    data: function (params) {
+                        return { q: params.term };
+                    },
+                    processResults: function (data) {
+                        return { results: data };
+                    }
+                }
+            });
+        });
+    </script>
+}

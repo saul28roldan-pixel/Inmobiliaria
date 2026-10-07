@@ -12,5 +12,8 @@ namespace Inmobiliaria.Models
         
         // Nuevo método para filtrar en la base de datos con paginado
         IList<Inmueble> ObtenerFiltradosPaginados(string? busqueda, int? idTipo, int pagina, int registrosPorPagina, out int totalRegistros);
-    }
+    
+            // Método para búsqueda AJAX con Select2
+        List<object> BuscarParaSelect(string termino, int maxResultados = 10);
+}
 }

@@ -425,23 +425,25 @@ public IActionResult Index(string? busqueda, int? idTipo, int pagina = 1)
             }
         }
 
-        // Método privado para cargar los dropdowns de Propietario y TipoInmueble
+                // Método privado para cargar los dropdowns
+        // Solo cargamos Tipos de Inmueble (son pocos y estáticos)
+        // Los Propietarios ya se cargan vía AJAX con Select2
         private void CargarDropdowns()
         {
-            var propietarios = repositorioPropietario.ObtenerTodos();
-            var listaPropietarios = propietarios.Select(p => new SelectListItem
-            {
-                Value = p.IdPropietario.ToString(),
-                Text = $"{p.Nombre} {p.Apellido}"
-            }).ToList();
-            ViewBag.Propietarios = listaPropietarios;
-
             var tipos = repositorioTipoInmueble.ObtenerTodos();
             ViewBag.Tipos = tipos.Select(t => new SelectListItem
             {
                 Value = t.IdTipo.ToString(),
                 Text = t.Descripcion
             }).ToList();
+        }
+
+        // Endpoint para búsqueda AJAX de Select2 (usado en Reservas)
+        [HttpGet]
+        public IActionResult Buscar(string q)
+        {
+            var resultados = repositorioInmueble.BuscarParaSelect(q, 10);
+            return Json(resultados);
         }
     }
 }

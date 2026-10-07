@@ -131,10 +131,10 @@ public IActionResult Index(string? busqueda, int pagina = 1)
         }
 
         private void CargarDesplegables()
-        {
-            ViewBag.Inquilinos = new SelectList(_repoInquilino.ObtenerTodos(), "IdInquilino", "NombreCompleto");
-            ViewBag.Inmuebles = new SelectList(_repoInmueble.ObtenerTodos(), "IdInmueble", "Direccion");
-        }
+{
+    // Ya no es necesario cargar todos los registros en ViewBag.
+    // Los desplegables se llenan dinámicamente vía AJAX con Select2.
+}
 
         private int ObtenerIdUsuarioActual()
         {

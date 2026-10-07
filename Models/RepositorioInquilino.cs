@@ -223,5 +223,42 @@ public IList<Inquilino> ObtenerFiltradosPaginados(
                 Telefono = reader.IsDBNull(reader.GetOrdinal("Telefono")) ? null : reader.GetString("Telefono"),
             };
         }
+    
+    public List<object> BuscarParaSelect(string termino, int maxResultados = 10)
+{
+    var resultados = new List<object>();
+
+    if (string.IsNullOrWhiteSpace(termino))
+        return resultados;
+
+    string sql = @"
+        SELECT IdInquilino AS id, 
+               CONCAT(NombreCompleto, ' - DNI: ', Dni) AS text
+        FROM Inquilino
+        WHERE NombreCompleto LIKE @q OR Dni LIKE @q
+        ORDER BY NombreCompleto
+        LIMIT @limit";
+
+    using (var connection = ObtenerConexion())
+    {
+        var command = new MySqlCommand(sql, connection);
+        command.Parameters.AddWithValue("@q", $"%{termino}%");
+        command.Parameters.AddWithValue("@limit", maxResultados);
+
+        connection.Open();
+        using (var reader = command.ExecuteReader())
+        {
+            while (reader.Read())
+            {
+                resultados.Add(new
+                {
+                    id = reader.GetInt32("id"),
+                    text = reader.GetString("text")
+                });
+            }
+        }
     }
+    return resultados;
+}
+}
 }

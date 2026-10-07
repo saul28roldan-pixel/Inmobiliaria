@@ -153,5 +153,14 @@ public IActionResult Index(
             }
             return RedirectToAction(nameof(Index));
         }
-    }
-}
+    
+                    // Endpoint para búsqueda AJAX de Select2
+        [HttpGet]
+        public IActionResult Buscar(string q)
+        {
+            // Usamos "repositorio" porque así se llama la variable al principio de la clase
+            var resultados = repositorio.BuscarParaSelect(q, 10); 
+            return Json(resultados);
+        }
+    } 
+} 

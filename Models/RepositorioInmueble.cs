@@ -211,5 +211,46 @@ namespace Inmobiliaria.Models
                 DescripcionTipo = reader.IsDBNull(reader.GetOrdinal("DescripcionTipo")) ? "Desconocido" : reader.GetString("DescripcionTipo")
             };
         }
-    }
+    
+            // ==========================================================
+        // NUEVO MÉTODO: Búsqueda AJAX para Select2 (Inmuebles)
+        // ==========================================================
+        public List<object> BuscarParaSelect(string termino, int maxResultados = 10)
+        {
+            var resultados = new List<object>();
+
+            if (string.IsNullOrWhiteSpace(termino))
+                return resultados;
+
+            string sql = @"
+                SELECT i.IdInmueble AS id, 
+                       CONCAT(i.Direccion, ' (', t.Descripcion, ')') AS text
+                FROM Inmueble i
+                INNER JOIN TipoInmueble t ON i.IdTipo = t.IdTipo
+                WHERE i.Direccion LIKE @q
+                ORDER BY i.Direccion
+                LIMIT @limit";
+
+            using (var connection = ObtenerConexion())
+            {
+                var command = new MySqlCommand(sql, connection);
+                command.Parameters.AddWithValue("@q", $"%{termino}%");
+                command.Parameters.AddWithValue("@limit", maxResultados);
+
+                connection.Open();
+                using (var reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        resultados.Add(new
+                        {
+                            id = reader.GetInt32("id"),
+                            text = reader.GetString("text")
+                        });
+                    }
+                }
+            }
+            return resultados;
+        }
+}
 }
