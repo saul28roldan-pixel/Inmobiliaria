@@ -1,0 +1,121 @@
+@model Inmobiliaria.Models.Reserva
+
+@{
+    ViewData["Title"] = "Finalizar Reserva Anticipadamente";
+    decimal multa = ViewBag.MultaCalculada ?? 0m;
+    string fechaPropuesta = ViewBag.FechaPropuesta ?? DateTime.Today.ToString("yyyy-MM-dd");
+}
+
+<h2>⏹ Finalizar anticipadamente la Reserva #@Model.IdReserva</h2>
+<hr />
+
+@if (ViewBag.Error != null)
+{
+    <div class="alert alert-danger">@ViewBag.Error</div>
+}
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card mb-3">
+            <div class="card-header"><strong>Datos de la reserva</strong></div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-5">Inquilino</dt>
+                    <dd class="col-sm-7">@Model.Inquilino?.NombreCompleto</dd>
+
+                    <dt class="col-sm-5">Inmueble</dt>
+                    <dd class="col-sm-7">@Model.Inmueble?.Direccion</dd>
+
+                    <dt class="col-sm-5">Período original</dt>
+                    <dd class="col-sm-7">@Model.FechaDesde.ToString("dd/MM/yyyy") - @Model.FechaHasta.ToString("dd/MM/yyyy")</dd>
+
+                    <dt class="col-sm-5">Monto diario</dt>
+                    <dd class="col-sm-7">@Model.MontoDiario.ToString("C")</dd>
+                </dl>
+            </div>
+        </div>
+
+        <div class="alert alert-warning">
+            <strong>Reglas de la multa:</strong>
+            <ul class="mb-0">
+                <li>Si se cumplió <strong>menos de la mitad</strong> del tiempo original: se paga el <strong>50%</strong> del alquiler restante.</li>
+                <li>Si se cumplió la mitad o más: se paga el <strong>25%</strong> del alquiler restante.</li>
+                <li>No se devuelve dinero en ningún caso.</li>
+                <li>La fecha de fin original se conserva en el sistema.</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <form asp-action="FinalizarAnticipadamente" asp-route-id="@Model.IdReserva" method="post">
+            <div class="mb-3">
+                <label for="fechaFinalizacion" class="form-label">Fecha en que se hará efectiva la finalización</label>
+                <input type="date" id="fechaFinalizacion" name="fechaFinalizacion" class="form-control"
+                       value="@fechaPropuesta"
+                       min="@Model.FechaDesde.ToString("yyyy-MM-dd")"
+                       max="@Model.FechaHasta.ToString("yyyy-MM-dd")"
+                       data-desde="@Model.FechaDesde.ToString("yyyy-MM-dd")"
+                       data-hasta="@Model.FechaHasta.ToString("yyyy-MM-dd")"
+                       data-monto="@Model.MontoDiario.ToString(System.Globalization.CultureInfo.InvariantCulture)" />
+            </div>
+
+            <div class="card border-danger mb-3">
+                <div class="card-body text-center">
+                    <div class="text-muted">Multa a pagar</div>
+                    <div class="display-6 text-danger" id="multaCalculada">@multa.ToString("C")</div>
+                    <small class="text-muted" id="detalleMulta"></small>
+                </div>
+            </div>
+
+            <p class="text-muted">
+                Al confirmar, la multa se carga automáticamente como pago de esta reserva
+                y la reserva queda finalizada.
+            </p>
+
+            <button type="submit" class="btn btn-danger"
+                    onclick="return confirm('¿Confirmás la finalización anticipada? Esta acción no se puede deshacer.');">
+                Confirmar finalización
+            </button>
+            <a asp-action="Details" asp-route-id="@Model.IdReserva" class="btn btn-secondary">Cancelar</a>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Vista previa de la multa (misma fórmula que el servidor; el servidor recalcula al confirmar).
+        (function () {
+            var input = document.getElementById('fechaFinalizacion');
+            var salida = document.getElementById('multaCalculada');
+            var detalle = document.getElementById('detalleMulta');
+            var MS_DIA = 24 * 60 * 60 * 1000;
+
+            function parse(s) { var p = s.split('-'); return Date.UTC(+p[0], +p[1] - 1, +p[2]); }
+
+            function calcular() {
+                if (!input.value) return;
+                var desde = parse(input.dataset.desde);
+                var hasta = parse(input.dataset.hasta);
+                var fin = parse(input.value);
+                var monto = parseFloat(input.dataset.monto);
+
+                var original = (hasta - desde) / MS_DIA;
+                var cumplido = (fin - desde) / MS_DIA;
+                var restante = original - cumplido;
+
+                var multa = 0, pct = 0;
+                if (restante > 0) {
+                    pct = cumplido < original / 2 ? 0.50 : 0.25;
+                    multa = restante * monto * pct;
+                }
+                salida.textContent = multa.toLocaleString('es-AR', { style: 'currency', currency: 'ARS' });
+                detalle.textContent = restante > 0
+                    ? restante + ' día(s) restantes × ' + (pct * 100) + '%'
+                    : 'Sin días restantes: no hay multa.';
+            }
+
+            input.addEventListener('input', calcular);
+            calcular();
+        })();
+    </script>
+}

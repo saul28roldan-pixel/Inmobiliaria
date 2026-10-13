@@ -65,10 +65,14 @@ namespace Inmobiliaria.Models
                 var sql = @"
                     SELECT r.*, 
                            inq.NombreCompleto AS InquilinoNombre, 
-                           inm.Direccion AS InmuebleDireccion
+                           inm.Direccion AS InmuebleDireccion,
+                           uc.NombreCompleto AS UsuarioCreacionNombre,
+                           uf.NombreCompleto AS UsuarioFinalizacionNombre
                     FROM Reserva r
                     INNER JOIN Inquilino inq ON r.IdInquilino = inq.IdInquilino
                     INNER JOIN Inmueble inm ON r.IdInmueble = inm.IdInmueble
+                    INNER JOIN Usuario uc ON r.IdUsuarioCreacion = uc.IdUsuario
+                    LEFT JOIN Usuario uf ON r.IdUsuarioFinalizacion = uf.IdUsuario
                     WHERE r.IdReserva = @id;";
 
                 using (var command = new MySqlCommand(sql, connection))
@@ -92,7 +96,9 @@ namespace Inmobiliaria.Models
                                 Multa = reader.IsDBNull(reader.GetOrdinal("Multa")) ? (decimal?)null : reader.GetDecimal("Multa"),
                                 IdUsuarioFinalizacion = reader.IsDBNull(reader.GetOrdinal("IdUsuarioFinalizacion")) ? (int?)null : reader.GetInt32("IdUsuarioFinalizacion"),
                                 Inquilino = new Inquilino { NombreCompleto = reader.GetString("InquilinoNombre") },
-                                Inmueble = new Inmueble { Direccion = reader.GetString("InmuebleDireccion") }
+                                Inmueble = new Inmueble { Direccion = reader.GetString("InmuebleDireccion") },
+                                UsuarioCreacion = new Usuario { NombreCompleto = reader.GetString("UsuarioCreacionNombre") },
+                                UsuarioFinalizacion = reader.IsDBNull(reader.GetOrdinal("UsuarioFinalizacionNombre")) ? null : new Usuario { NombreCompleto = reader.GetString("UsuarioFinalizacionNombre") }
                             };
                         }
                     }
@@ -151,6 +157,28 @@ namespace Inmobiliaria.Models
         {
             using (var connection = ObtenerConexion())
             {
+                // Misma regla que en Alta, pero ignorando la propia reserva que se está editando.
+                var sqlValidacion = @"
+                    SELECT COUNT(*) FROM Reserva 
+                    WHERE IdInmueble = @IdInmueble 
+                    AND IdReserva <> @IdReserva
+                    AND FechaDesde <= @FechaHasta 
+                    AND FechaHasta >= @FechaDesde;";
+
+                connection.Open();
+                using (var commandValidacion = new MySqlCommand(sqlValidacion, connection))
+                {
+                    commandValidacion.Parameters.AddWithValue("@IdReserva", reserva.IdReserva);
+                    commandValidacion.Parameters.AddWithValue("@IdInmueble", reserva.IdInmueble);
+                    commandValidacion.Parameters.AddWithValue("@FechaDesde", reserva.FechaDesde);
+                    commandValidacion.Parameters.AddWithValue("@FechaHasta", reserva.FechaHasta);
+
+                    if (Convert.ToInt32(commandValidacion.ExecuteScalar()) > 0)
+                    {
+                        throw new Exception("El inmueble ya se encuentra reservado en las fechas seleccionadas por otra reserva. Por favor, elija otras fechas.");
+                    }
+                }
+
                 var sql = @"
                     UPDATE Reserva 
                     SET IdInquilino = @IdInquilino,
@@ -169,7 +197,6 @@ namespace Inmobiliaria.Models
                     command.Parameters.AddWithValue("@FechaHasta", reserva.FechaHasta);
                     command.Parameters.AddWithValue("@MontoDiario", reserva.MontoDiario);
 
-                    connection.Open();
                     return command.ExecuteNonQuery();
                 }
             }

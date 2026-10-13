@@ -6,6 +6,15 @@
 
 <h1>Detalles de la Reserva #@Model.IdReserva</h1>
 
+@if (TempData["Mensaje"] != null)
+{
+    <div class="alert alert-success">@TempData["Mensaje"]</div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+
 <div class="card">
     <div class="card-body">
         <dl class="row">
@@ -43,7 +52,41 @@
     </div>
 </div>
 
+@* Auditoría: visible solo para administradores *@
+@if (User.IsInRole("administrador"))
+{
+    <div class="card border-info mt-3">
+        <div class="card-header bg-info text-white"><strong>📋 Información de Auditoría</strong></div>
+        <div class="card-body">
+            <dl class="row mb-0">
+                <dt class="col-sm-3">Creada por</dt>
+                <dd class="col-sm-9">@(Model.UsuarioCreacion?.NombreCompleto ?? "—")</dd>
+
+                @if (Model.FechaFinalizacion.HasValue)
+                {
+                    <dt class="col-sm-3">Finalizada por</dt>
+                    <dd class="col-sm-9">@(Model.UsuarioFinalizacion?.NombreCompleto ?? "—")</dd>
+
+                    <dt class="col-sm-3">Fecha de finalización</dt>
+                    <dd class="col-sm-9">@Model.FechaFinalizacion.Value.ToString("dd/MM/yyyy")</dd>
+
+                    <dt class="col-sm-3">Multa</dt>
+                    <dd class="col-sm-9">@((Model.Multa ?? 0).ToString("C"))</dd>
+                }
+            </dl>
+        </div>
+    </div>
+}
+
 <div class="mt-3">
+    @if (!Model.FechaFinalizacion.HasValue)
+    {
+        <a asp-action="Renovar" asp-route-id="@Model.IdReserva" class="btn btn-success">🔁 Renovar / Extender</a>
+        @if (Model.FechaHasta >= DateTime.Today)
+        {
+            <a asp-action="FinalizarAnticipadamente" asp-route-id="@Model.IdReserva" class="btn btn-warning">⏹ Finalizar anticipadamente</a>
+        }
+    }
     <a asp-action="Edit" asp-route-id="@Model.IdReserva" class="btn btn-primary">Editar</a>
     <a asp-action="Index" class="btn btn-secondary">Volver a la lista</a>
 </div>

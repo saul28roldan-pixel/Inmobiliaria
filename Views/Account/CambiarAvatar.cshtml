@@ -1,0 +1,59 @@
+@model Inmobiliaria.Models.Usuario
+@{
+    ViewData["Title"] = "Cambiar Avatar";
+}
+
+<h2>Cambiar Avatar</h2>
+
+@if (ViewBag.Error != null)
+{
+    <div class="alert alert-danger">@ViewBag.Error</div>
+}
+
+<div class="row mt-4">
+    <div class="col-md-4 text-center">
+        <p class="text-muted mb-2">Vista previa</p>
+        @if (!string.IsNullOrEmpty(Model.Avatar))
+        {
+            <img id="previewAvatar" src="@Model.Avatar" alt="Avatar" class="img-thumbnail rounded-circle mb-3"
+                 style="width:180px; height:180px; object-fit:cover;" />
+        }
+        else
+        {
+            <img id="previewAvatar" src="" alt="Avatar" class="img-thumbnail rounded-circle mb-3 d-none"
+                 style="width:180px; height:180px; object-fit:cover;" />
+            <div id="placeholderAvatar" class="bg-secondary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+                 style="width:180px; height:180px; font-size:4rem;">
+                👤
+            </div>
+        }
+    </div>
+
+    <div class="col-md-8">
+        <form asp-action="CambiarAvatar" method="post" enctype="multipart/form-data">
+            <div class="mb-3">
+                <label for="AvatarFile" class="form-label">Seleccioná una imagen</label>
+                <input type="file" id="AvatarFile" name="AvatarFile" class="form-control"
+                       accept=".jpg,.jpeg,.png,.webp,.gif,image/*" />
+                <div class="form-text">Formatos: jpg, png, webp o gif. Tamaño máximo: 2 MB.</div>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Guardar Avatar</button>
+            <a asp-action="Perfil" class="btn btn-secondary">Cancelar</a>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.getElementById(AvatarFile).addEventListener(change, function (e) {
+            var file = e.target.files[0];
+            if (!file) return;
+            var preview = document.getElementById(previewAvatar);
+            var placeholder = document.getElementById(placeholderAvatar);
+            preview.src = URL.createObjectURL(file);
+            preview.classList.remove(d-none);
+            if (placeholder) placeholder.classList.add(d-none);
+        });
+    </script>
+}

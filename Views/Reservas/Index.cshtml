@@ -5,6 +5,15 @@
 
 <h1>Listado de Reservas</h1>
 
+@if (TempData["Mensaje"] != null)
+{
+    <div class="alert alert-success">@TempData["Mensaje"]</div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+
 <!-- FORMULARIO DE BÚSQUEDA -->
 <form asp-action="Index" method="get" class="mb-4 p-3 bg-light rounded border">
     <div class="row g-3 align-items-end">
@@ -67,7 +76,21 @@
                     <a asp-action="Details" asp-route-id="@item.IdReserva" class="btn btn-sm btn-success">Detalles</a>
                     <a asp-controller="Pagos" asp-action="Index" asp-route-idReserva="@item.IdReserva" class="btn btn-sm btn-info"> Pagos</a>
                     <a asp-action="Edit" asp-route-id="@item.IdReserva" class="btn btn-sm btn-warning">Editar</a>
-                    <a asp-action="Delete" asp-route-id="@item.IdReserva" class="btn btn-sm btn-danger" onclick="return confirm('¿Está seguro de eliminar esta reserva?');">Eliminar</a>
+                    @if (!item.FechaFinalizacion.HasValue)
+                    {
+                        <a asp-action="Renovar" asp-route-id="@item.IdReserva" class="btn btn-sm btn-primary">Renovar</a>
+                        @if (item.FechaHasta >= DateTime.Today)
+                        {
+                            <a asp-action="FinalizarAnticipadamente" asp-route-id="@item.IdReserva" class="btn btn-sm btn-secondary">Finalizar</a>
+                        }
+                    }
+                    @if (User.IsInRole("administrador"))
+                    {
+                        <form asp-action="Delete" asp-route-id="@item.IdReserva" method="post" class="d-inline" onsubmit="return confirm('¿Está seguro de eliminar esta reserva?');">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-sm btn-danger">Eliminar</button>
+                        </form>
+                    }
                 </td>
             </tr>
         }

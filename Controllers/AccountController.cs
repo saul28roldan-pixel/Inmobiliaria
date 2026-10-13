@@ -100,7 +100,7 @@ namespace Inmobiliaria.Controllers
         [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult EditarDatos(EditarDatosViewModel model)
+        public async Task<IActionResult> EditarDatos(EditarDatosViewModel model)
         {
             if (!ModelState.IsValid) return View(model);
 
@@ -112,6 +112,9 @@ namespace Inmobiliaria.Controllers
                 usuario.NombreCompleto = model.NombreCompleto;
                 usuario.Email = model.Email;
                 _repoUsuario.Modificacion(usuario);
+
+                // El nombre vive en la cookie de sesión: se vuelve a emitir para que el navbar lo refleje.
+                await RefrescarSesionAsync(usuario);
 
                 TempData["Mensaje"] = "Datos personales actualizados correctamente.";
                 return RedirectToAction(nameof(Perfil));
@@ -188,8 +191,6 @@ namespace Inmobiliaria.Controllers
 
             try
             {
-                EliminarArchivoSiExiste(usuario.Avatar);
-
                 var ruta = GuardarAvatar(AvatarFile);
                 if (ruta == null)
                 {
@@ -197,6 +198,8 @@ namespace Inmobiliaria.Controllers
                     return View(usuario);
                 }
 
+                // Recién ahora que el nuevo se guardó bien, se borra el anterior.
+                EliminarArchivoSiExiste(usuario.Avatar);
                 usuario.Avatar = ruta;
                 _repoUsuario.Modificacion(usuario);
 
@@ -237,6 +240,18 @@ namespace Inmobiliaria.Controllers
 
         // ===================== HELPERS =====================
 
+        private async Task RefrescarSesionAsync(Usuario usuario)
+        {
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.Name, usuario.NombreCompleto),
+                new Claim(ClaimTypes.NameIdentifier, usuario.IdUsuario.ToString()),
+                new Claim(ClaimTypes.Role, usuario.Rol)
+            };
+            var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(identity));
+        }
+
         private Usuario? ObtenerUsuarioActual()
         {
             var idClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -268,6 +283,7 @@ namespace Inmobiliaria.Controllers
         private void EliminarArchivoSiExiste(string? rutaRelativa)
         {
             if (string.IsNullOrEmpty(rutaRelativa)) return;
+            if (!rutaRelativa.StartsWith("/img/avatars/", StringComparison.OrdinalIgnoreCase)) return;
 
             var rutaFisica = Path.Combine(_entorno.WebRootPath, rutaRelativa.TrimStart('/'));
             if (System.IO.File.Exists(rutaFisica))

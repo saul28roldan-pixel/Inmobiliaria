@@ -30,78 +30,70 @@
                             <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Propietarios"
-                               asp-action="Index">Propietarios</a>
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Propietarios" asp-action="Index">Propietarios</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Inquilinos"
-                               asp-action="Index">Inquilinos</a>
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Inquilinos" asp-action="Index">Inquilinos</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Inmuebles"
-                               asp-action="Index">Inmuebles</a>
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Inmuebles" asp-action="Index">Inmuebles</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Reservas"
-                               asp-action="Index">Reservas</a>
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Reservas" asp-action="Index">Reservas</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Reservas" asp-action="Informe">📊
-                                Informes</a>
-                            </li>
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Reservas" asp-action="Informe">📊 Informes</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-controller="TipoInmueble" asp-action="Index">Tipos de Inmuebles</a>
+                        </li>
+                        @if (User.IsInRole("administrador"))
+                        {
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-controller="TipoInmueble"
-                                   asp-action="Index">Tipos de Inmuebles</a>
+                                <a class="nav-link text-dark" asp-area="" asp-controller="Usuarios" asp-action="Index">👥 Usuarios</a>
                             </li>
-                            <li class="nav-item">
-                                @if (User.Identity?.IsAuthenticated == true)
-                                {
-                                    <li class="nav-item">
-                                        <a class="nav-link text-dark" asp-area="" asp-controller="Usuarios" asp-action="Index">👥
-                                            Usuarios</a>
-                                        </li>
-                                    }
-                                </ul>
-                                <!-- ✅ SECCIÓN DE AUTENTICACIÓN (LOGIN / LOGOUT) -->
-                                <ul class="navbar-nav">
-                                    @if (User.Identity?.IsAuthenticated == true)
-                                    {
-                                        <li class="nav-item">
-                                            <a class="nav-link text-dark" asp-controller="Account" asp-action="Perfil">
-                                                👤 @User.Identity.Name
-                                            </a>
-                                        </li>
-                                        <li class="nav-item">
-                                            <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
-                                                @Html.AntiForgeryToken()
-                                                <button type="submit" class="btn btn-link nav-link text-dark p-0">Cerrar Sesión</button>
-                                            </form>
-                                        </li>
-                                    }
-                                    else
-                                    {
-                                        <li class="nav-item">
-                                            <a class="nav-link text-dark" asp-controller="Account" asp-action="Login">🔐 Iniciar
-                                                Sesión</a>
-                                            </li>
-                                        }
-                                    </ul>
-                                </div>
-                            </div>
-                        </nav>
-                    </header>
-                    <div class="container">
-                        <main role="main" class="pb-3">
-                            @RenderBody()
-                        </main>
-                    </div>
+                        }
+                    </ul>
 
-                    <footer class="border-top footer text-muted">
-                        <div class="container">
-                            &copy; 2026 - Inmobiliaria - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </div>
-                    </footer>
-                    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+                    <!-- Sección de autenticación (login / perfil / logout) -->
+                    <ul class="navbar-nav">
+                        @if (User.Identity?.IsAuthenticated == true)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-controller="Account" asp-action="Perfil">
+                                    👤 @User.Identity.Name
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-link nav-link text-dark p-0">Cerrar Sesión</button>
+                                </form>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-controller="Account" asp-action="Login">🔐 Iniciar Sesión</a>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+    <div class="container">
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
+    </div>
+
+    <footer class="border-top footer text-muted">
+        <div class="container">
+            &copy; 2026 - Inmobiliaria - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+        </div>
+    </footer>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
                     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
                     <script src="~/js/site.js" asp-append-version="true"></script>
                     <!-- Select2 JS -->

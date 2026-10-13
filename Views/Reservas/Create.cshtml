@@ -16,7 +16,14 @@
             <div class="mb-3">
     <label asp-for="IdInquilino" class="form-label">Inquilino</label>
     <select asp-for="IdInquilino" id="selectInquilino" class="form-select">
-        <option value="">-- Buscar inquilino --</option>
+        @if (Model.IdInquilino > 0 && Model.Inquilino?.NombreCompleto != null)
+        {
+            <option value="@Model.IdInquilino" selected>@Model.Inquilino.NombreCompleto</option>
+        }
+        else
+        {
+            <option value="">-- Buscar inquilino --</option>
+        }
     </select>
     <span asp-validation-for="IdInquilino" class="text-danger"></span>
 </div>
@@ -24,7 +31,14 @@
 <div class="mb-3">
     <label asp-for="IdInmueble" class="form-label">Inmueble</label>
     <select asp-for="IdInmueble" id="selectInmueble" class="form-select">
-        <option value="">-- Buscar inmueble --</option>
+        @if (Model.IdInmueble > 0 && Model.Inmueble?.Direccion != null)
+        {
+            <option value="@Model.IdInmueble" selected>@Model.Inmueble.Direccion</option>
+        }
+        else
+        {
+            <option value="">-- Buscar inmueble --</option>
+        }
     </select>
     <span asp-validation-for="IdInmueble" class="text-danger"></span>
 </div>

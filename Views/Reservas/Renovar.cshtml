@@ -1,0 +1,72 @@
+@model Inmobiliaria.Models.RenovarReservaViewModel
+
+@{
+    ViewData["Title"] = "Renovar / Extender Reserva";
+}
+
+<h2>🔁 Renovar / Extender la Reserva #@Model.IdReservaOriginal</h2>
+<hr />
+
+@if (ViewBag.Error != null)
+{
+    <div class="alert alert-danger">@ViewBag.Error</div>
+}
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card mb-3">
+            <div class="card-header"><strong>Reserva actual (no se modifica)</strong></div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-4">Inquilino</dt>
+                    <dd class="col-sm-8">@Model.InquilinoNombre</dd>
+
+                    <dt class="col-sm-4">Inmueble</dt>
+                    <dd class="col-sm-8">@Model.InmuebleDireccion</dd>
+
+                    <dt class="col-sm-4">Período</dt>
+                    <dd class="col-sm-8">
+                        @Model.FechaDesdeOriginal.ToString("dd/MM/yyyy") - @Model.FechaHastaOriginal.ToString("dd/MM/yyyy")
+                    </dd>
+                </dl>
+            </div>
+        </div>
+
+        <div class="alert alert-info">
+            Se creará una <strong>reserva nueva</strong> con el mismo inquilino e inmueble,
+            con las fechas y el monto que indiques. La reserva original queda intacta.
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <form asp-action="Renovar" method="post">
+            <input type="hidden" asp-for="IdReservaOriginal" />
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label asp-for="FechaDesde" class="form-label"></label>
+                    <input asp-for="FechaDesde" class="form-control" type="date" />
+                    <span asp-validation-for="FechaDesde" class="text-danger"></span>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label asp-for="FechaHasta" class="form-label"></label>
+                    <input asp-for="FechaHasta" class="form-control" type="date" />
+                    <span asp-validation-for="FechaHasta" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="MontoDiario" class="form-label"></label>
+                <input asp-for="MontoDiario" class="form-control" type="number" step="0.01" />
+                <span asp-validation-for="MontoDiario" class="text-danger"></span>
+            </div>
+
+            <button type="submit" class="btn btn-success">Crear renovación</button>
+            <a asp-action="Details" asp-route-id="@Model.IdReservaOriginal" class="btn btn-secondary">Cancelar</a>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
