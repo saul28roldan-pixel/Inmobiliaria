@@ -1,0 +1,40 @@
+@model Inmobiliaria.Models.CambiarClaveViewModel
+@{
+    ViewData["Title"] = "Cambiar Contraseña";
+}
+
+<h2>Cambiar Contraseña</h2>
+
+@if (ViewBag.Error != null)
+{
+    <div class="alert alert-danger">@ViewBag.Error</div>
+}
+
+<form asp-action="CambiarClave" method="post">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+    <div class="mb-3">
+        <label asp-for="ClaveActual" class="form-label"></label>
+        <input asp-for="ClaveActual" class="form-control" />
+        <span asp-validation-for="ClaveActual" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="ClaveNueva" class="form-label"></label>
+        <input asp-for="ClaveNueva" class="form-control" />
+        <span asp-validation-for="ClaveNueva" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="ConfirmarClave" class="form-label"></label>
+        <input asp-for="ConfirmarClave" class="form-control" />
+        <span asp-validation-for="ConfirmarClave" class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-warning">Cambiar Contraseña</button>
+    <a asp-action="Perfil" class="btn btn-secondary">Cancelar</a>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
