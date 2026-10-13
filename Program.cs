@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
    builder.Services.AddScoped<IRepositorioReserva, RepositorioReserva>();
    builder.Services.AddScoped<IRepositorioTipoInmueble, RepositorioTipoInmueble>();
 builder.Services.AddScoped<IRepositorioUsuario, RepositorioUsuario>();
+builder.Services.AddScoped<IRepositorioPago, RepositorioPago>();
  // Autenticación por cookies: sin esto, [Authorize] no tiene forma de
    // saber quién está logueado y la app rompe con una excepción.
    builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)

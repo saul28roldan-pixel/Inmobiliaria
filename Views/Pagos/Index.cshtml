@@ -1,0 +1,84 @@
+@model IList<Inmobiliaria.Models.Pago>
+
+@{
+    ViewData["Title"] = "Pagos de la Reserva";
+    dynamic reserva = ViewBag.Reserva;
+}
+
+<h2>Pagos de la Reserva #@reserva.IdReserva</h2>
+
+<div class="alert alert-info">
+    <strong>Inmueble:</strong> @reserva.Inmueble?.Direccion<br />
+    <strong>Inquilino:</strong> @reserva.Inquilino?.NombreCompleto<br />
+    <strong>Período:</strong> @reserva.FechaDesde.ToString("dd/MM/yyyy") - @reserva.FechaHasta.ToString("dd/MM/yyyy")
+</div>
+
+@if (TempData["Mensaje"] != null)
+{
+    <div class="alert alert-success">@TempData["Mensaje"]</div>
+}
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+
+<div class="mb-3">
+    <a asp-controller="Pagos" asp-action="Create" asp-route-idReserva="@reserva.IdReserva" class="btn btn-primary">
+        ➕ Cargar Nuevo Pago
+    </a>
+    <a asp-controller="Reservas" asp-action="Details" asp-route-id="@reserva.IdReserva" class="btn btn-secondary">
+        ← Volver a la Reserva
+    </a>
+</div>
+
+@if (Model.Count == 0)
+{
+    <div class="alert alert-warning">No hay pagos registrados para esta reserva.</div>
+}
+else
+{
+    <table class="table table-striped">
+        <thead class="table-dark">
+            <tr>
+                <th>ID</th>
+                <th>Concepto</th>
+                <th>Fecha</th>
+                <th>Importe</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var pago in Model)
+            {
+                <tr class="@(pago.Anulado ? "table-danger" : "")">
+                    <td>@pago.IdPago</td>
+                    <td>@pago.Concepto</td>
+                    <td>@pago.FechaPago.ToString("dd/MM/yyyy")</td>
+                    <td>$@pago.Importe.ToString("N2")</td>
+                    <td>
+                        @if (pago.Anulado)
+                        {
+                            <span class="badge bg-danger">Anulado</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-success">Activo</span>
+                        }
+                    </td>
+                    <td>
+                        @if (!pago.Anulado)
+                        {
+                            <a asp-action="Edit" asp-route-id="@pago.IdPago" class="btn btn-sm btn-warning">Editar</a>
+                            <form asp-action="Anular" asp-route-id="@pago.IdPago" method="post" style="display:inline;" onsubmit="return confirm('¿Seguro que querés anular este pago? Esta acción no se puede deshacer.');">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-sm btn-danger">Anular</button>
+                            </form>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

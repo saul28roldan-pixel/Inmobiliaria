@@ -64,6 +64,8 @@
                     }
                 </td>
                 <td>
+                    <a asp-action="Details" asp-route-id="@item.IdReserva" class="btn btn-sm btn-success">Detalles</a>
+                    <a asp-controller="Pagos" asp-action="Index" asp-route-idReserva="@item.IdReserva" class="btn btn-sm btn-info"> Pagos</a>
                     <a asp-action="Edit" asp-route-id="@item.IdReserva" class="btn btn-sm btn-warning">Editar</a>
                     <a asp-action="Delete" asp-route-id="@item.IdReserva" class="btn btn-sm btn-danger" onclick="return confirm('¿Está seguro de eliminar esta reserva?');">Eliminar</a>
                 </td>

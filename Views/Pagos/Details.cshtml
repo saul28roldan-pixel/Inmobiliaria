@@ -1,0 +1,75 @@
+@model Inmobiliaria.Models.Pago
+
+@{
+    ViewData["Title"] = "Detalles del Pago";
+}
+
+<h2>Detalles del Pago #@Model.IdPago</h2>
+<hr />
+
+<div class="row">
+    <div class="col-md-6">
+        <dl class="row">
+            <dt class="col-sm-4">ID:</dt>
+            <dd class="col-sm-8">@Model.IdPago</dd>
+
+            <dt class="col-sm-4">Reserva:</dt>
+            <dd class="col-sm-8">#@Model.IdReserva</dd>
+
+            <dt class="col-sm-4">Concepto:</dt>
+            <dd class="col-sm-8">@Model.Concepto</dd>
+
+            <dt class="col-sm-4">Fecha de Pago:</dt>
+            <dd class="col-sm-8">@Model.FechaPago.ToString("dd/MM/yyyy")</dd>
+
+            <dt class="col-sm-4">Importe:</dt>
+            <dd class="col-sm-8">$@Model.Importe.ToString("N2")</dd>
+
+            <dt class="col-sm-4">Estado:</dt>
+            <dd class="col-sm-8">
+                @if (Model.Anulado)
+                {
+                    <span class="badge bg-danger">Anulado</span>
+                }
+                else
+                {
+                    <span class="badge bg-success">Activo</span>
+                }
+            </dd>
+        </dl>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card border-info">
+            <div class="card-header bg-info text-white">
+                <strong>📋 Información de Auditoría</strong>
+            </div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-5">Creado por Usuario ID:</dt>
+                    <dd class="col-sm-7">@Model.IdUsuarioCreacion</dd>
+
+                    @if (Model.Anulado)
+                    {
+                        <dt class="col-sm-5">Anulado por Usuario ID:</dt>
+                        <dd class="col-sm-7">@Model.IdUsuarioAnulacion</dd>
+
+                        <dt class="col-sm-5">Fecha de Anulación:</dt>
+                        <dd class="col-sm-7">@Model.FechaAnulacion?.ToString("dd/MM/yyyy HH:mm")</dd>
+                    }
+                    else
+                    {
+                        <dt class="col-sm-5">Estado:</dt>
+                        <dd class="col-sm-7"><span class="text-success">Pago activo (no anulado)</span></dd>
+                    }
+                </dl>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="mt-4">
+    <a asp-action="Index" asp-route-idReserva="@Model.IdReserva" class="btn btn-secondary">
+        ← Volver al listado de pagos
+    </a>
+</div>
